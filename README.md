@@ -4,6 +4,9 @@
 
 The simulator runs entirely in the browser as a single HTML file. There are no dependencies, no build step, and no server required.
 
+***Link:***
+[Diffusion Model Explorer](https://hgd-dev.github.io/Diffusion-Model-Explorer/)
+
 ## Features
 
 * **Forward prediction mode**
