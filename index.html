@@ -611,11 +611,12 @@ class Model {
       Ri[i] = G.eventGain * (1 - this.S[i]) * nuE(i) * r.Vev * pulse;
       const inWindow = scaff && week >= scaff.a && week <= scaff.b;
       const gB = inWindow ? scaff.gB : 1.0;
+      const support = inWindow ? (gB - 1.0) * G.scaffReinf : 0.0;
       const y = atil[i];
       const conc = this.beta[i] * (1 - Math.exp(-r.delta * y));
       const skip = (y <= 1e-9) ? this.chi[i] : 0;
       const aboveQuorum = A >= r.Nmin;
-      Bi[i] = nuE(i) * gB * (aboveQuorum ? (conc - skip) : -r.chiViab);
+      Bi[i] = nuE(i) * (aboveQuorum ? gB * (conc - skip) : -r.chiViab + support);
     }
 
     // decay and gain
