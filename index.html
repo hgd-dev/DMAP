@@ -279,7 +279,7 @@
           <div class="stats">
             <div class="stat"><div class="k">Turnout</div><div class="v" id="sA">0</div></div>
             <div class="stat"><div class="k">Mean motivation</div><div class="v" id="sM">0.00</div></div>
-            <div class="stat"><div class="k">Members</div><div class="v" id="sAlive">0<small>/0</small></div></div>
+            <div class="stat"><div class="k">Active agents</div><div class="v" id="sAlive">0</div></div>
             <div class="stat"><div class="k">Reach</div><div class="v" id="sReach">0<small>%</small></div></div>
           </div>
         </div>
@@ -293,8 +293,8 @@
           <div class="lkey">
             <i><span class="d" style="background:var(--p4)"></span>member (here)</i>
             <i><span class="d" style="background:var(--p4);opacity:.4"></span>member (absent)</i>
-            <i><span class="d" style="background:#c79ce0"></span>being drawn in</i>
-            <i><span class="d" style="background:#564f78;box-shadow:0 0 0 2px rgba(122,162,255,.7)"></span>core network student</i>
+            <i><span class="d" style="background:#c79ce0"></span>illustrative reach (not modeled)</i>
+            <i><span class="d" style="background:#564f78;box-shadow:0 0 0 2px rgba(122,162,255,.7)"></span>modeled core agent</i>
           </div>
         </div>
         <div class="chartwrap">
@@ -386,15 +386,9 @@ const REGIMES = {
 const GLOB = {
   eps0: 1e-6, kapG: 2.0,
   eventGain: 3.4, peerScale: 1.0,
-  // smooth (logistic) quorum gate; larger kapN approaches a hard threshold
-  kapN: 0.32,
-  // visibility amplification (gamma_v) channels: peer transmission and tie growth
-  visPeer: 1.25, visHebb: 1.25,
-  // early-weeks mentoring: positive reinforcement below quorum during the window
+  // early-weeks mentoring: additive support below quorum
   scaffReinf: 0.62,
-  // saturation damping on internal reinforcement (diminishing returns)
-  kapBS: 0.55,
-  lamL: 0.37, lamLdown: 0.045, lamF: 0.30,
+  lamL: 0.37, lamF: 0.30,
   phi1: 0.68, phi2: 0.34, phi3: 0.20,
   psi1: 0.45, psi2: 0.20, psi3: 0.30,
   sRole: 1.0, rPlus: 0.10,
@@ -405,7 +399,6 @@ const GLOB = {
   // persuasiveness/credibility
   z0: 0.30, z1: 0.40, z2: 0.30, wc1: 0.5, wc2: 0.5, credWin: 3,
   // attrition
-  kapDrop: 0.5,
   // modulating states (set gains to 0 to recover the core dynamics)
   betaE: 0.15, betaF: 0.30, betaR: 0.30,
   kapEF: 0.30, kapSL: 0.50, kapPhi: 0.30,
@@ -842,7 +835,7 @@ const DEF = {
 const PRESETS = {
   A:{ label:"A · Naive collapse", regime:"collapse",
       events:[{week:3,amp:0.60}], gv:1, K:14, scaffOn:false, scaffA:2,scaffB:6,gB:1.8, groupSize:8, inTies:4, outTies:1.5, acquaint:0, body:220, trials:250 },
-  B:{ label:"B · Favorable & stable", regime:"stabilize",
+  B:{ label:"B · Favorable persistent regime", regime:"stabilize",
       events:[{week:3,amp:0.35},{week:7,amp:0.35},{week:11,amp:0.35}], gv:1.4, K:18,
       scaffOn:false, scaffA:2,scaffB:6,gB:1.8, groupSize:8, inTies:4, outTies:1.5, acquaint:0, body:220, trials:250 },
   C:{ label:"C · Hand-specified finite-horizon rescue", regime:"collapse",
@@ -1027,7 +1020,15 @@ function plan(rev){
     return { feasible:false, achieved:maxTerm, config:maxC, res:maxRes };
   }
   let best = JSON.parse(JSON.stringify(maxC));
-  const ok = (c)=>{ simCount++; return terminalA(window.PDE.simulate(cfgToOpts(c)).snaps) >= rev.Astar - tol; };
+  const ok = (c)=>{
+    if(simCount >= simBudget) return false;
+  
+    simCount++;
+  
+    return terminalA(
+      window.PDE.simulate(cfgToOpts(c)).snaps
+    ) >= rev.Astar - tol;
+  };
 
   function descend(start){
     let c = JSON.parse(JSON.stringify(start));
@@ -1112,9 +1113,23 @@ function instructions(c, rev, res){
   const term=terminalA(res.snaps), pk=peakA(res.snaps);
   const Nmin = window.PDE.REGIMES[c.regime].Nmin;
   let frame;
-  if(term>=Nmin) frame=`The plan pushes the club across its quorum (~${Nmin}) and into the self-sustaining basin — once there, members reinforce each other and the club holds with less ongoing effort.`;
-  else if(term>rev.Astar*0.6) frame=`This holds a committed core below the formal quorum (~${Nmin}). It survives on loyalty and tight ties, but sits in the fragile basin — sustained or renewed effort keeps it from sliding back.`;
-  else frame=`The target is modest; the club lands in a low but living state. Expect a gentle decline without renewal — this is the collapse regime's pull reasserting itself.`;
+  if(term>=Nmin) {
+    frame =
+      `On the deterministic reference realization, the plan finishes ` +
+      `above the quorum (~${Nmin}) over the terminal window. ` +
+      `This is finite-horizon evidence, not proof of a self-sustaining equilibrium.`;
+  }
+  else if(term>rev.Astar*0.6) {
+    frame =
+      `On the deterministic reference realization, the plan preserves ` +
+      `a nontrivial terminal core but remains below the formal quorum (~${Nmin}). ` +
+      `Continued persistence beyond the simulated horizon is not established.`;
+  }
+  else {
+    frame =
+      `On the deterministic reference realization, the plan ends at a low ` +
+      `activity level. The result should be interpreted only over the simulated horizon.`;
+  }
   return {steps, frame, term, pk, Nmin};
 }
 
@@ -1388,19 +1403,27 @@ function drawChart(weekIdx){
 // stat readouts
 function updateStats(){
   if(!S.res) return;
-  const s=S.res.snaps[S.week], n=S.res.model.n, jn=S.res.joined||[];
-  let core=0;
-  if(S.resultMode==="ensemble"){
-    core = s.act ? s.act.reduce((a,b)=>a+b,0) : 0;
-  } else {
-    for(let i=0;i<n;i++){ if((jn[i]??Infinity)<=S.week && s.act[i]>0.5) core++; }
-  }
-  const recruited = S.res.recruit ? (S.res.recruit[S.week]||0) : 0;
-  const members = Math.round(core + recruited);
-  const reach=Math.round(s.m.filter(x=>x>0.4).length/n*100);
-  document.getElementById("sA").textContent=Math.round(s.A);
-  document.getElementById("sM").textContent=mean(s.m).toFixed(2);
-  document.getElementById("sAlive").innerHTML=String(members);
+  const s = S.res.snaps[S.week];
+  const n = S.res.model.n;
+  
+  const activeAgents =
+    s.act
+      ? s.act.reduce((a, b) => a + b, 0)
+      : 0;
+  
+  const reach =
+    Math.round(
+      s.m.filter(x => x > 0.4).length / n * 100
+    );
+  
+  document.getElementById("sA").textContent =
+    Math.round(s.A);
+  
+  document.getElementById("sM").textContent =
+    mean(s.m).toFixed(2);
+  
+  document.getElementById("sAlive").textContent =
+    activeAgents.toFixed(1);
   document.getElementById("sReach").innerHTML=reach+'<small>%</small>';
   document.getElementById("vizttl").textContent =
     S.resultMode === "ensemble"
@@ -1534,11 +1557,22 @@ function setProgress(done,total,runs){
   document.getElementById("progpct").textContent=pct+"%";
   if(runs && runs.length){
     const finals=runs.map(r=>terminalA(r.snaps));
-    const pcfg=S._progressCfg || S.cfg;
-    const reg=pcfg.regime;
-    const surv=finals.filter(x=>x>=window.PDE.REGIMES[reg].Nmin).length/finals.length;
-    document.getElementById("progmean").textContent=mean(finals).toFixed(1);
-    document.getElementById("progsurv").textContent=Math.round(surv*100)+"%";
+    const pcfg = S._progressCfg || S.cfg;
+    const reg = pcfg.regime;
+    
+    const threshold =
+      S.mode === "reverse"
+        ? S.rev.Astar
+        : window.PDE.REGIMES[reg].Nmin;
+    
+    const rate =
+      finals.filter(x => x >= threshold).length / finals.length;
+    
+    document.getElementById("progmean").textContent =
+      mean(finals).toFixed(1);
+    
+    document.getElementById("progsurv").textContent =
+      Math.round(rate * 100) + "%";
   }
 }
 function runSampleSimulation(){
@@ -1659,8 +1693,20 @@ async function runPlanEnsemble(){
   document.getElementById("scrub").max=S.res.snaps.length-1;
   S.week=S.res.snaps.length-1;
   renderFrame();
-  const ens=S.res.ensemble;
-  setPlanStatus(`<div class="dirtyflag">Showing the proposed plan averaged across <b>${ens.trials}</b> randomized networks. Survival probability: <b>${Math.round(ens.survivalRate*100)}%</b>. Scrub or play the timeline to inspect average weekly states.</div>`);
+  const ens = S.res.ensemble;
+
+  const targetRate =
+    runs.filter(
+      r => terminalA(r.snaps) >= S.rev.Astar
+    ).length / runs.length;
+  
+  setPlanStatus(
+    `<div class="dirtyflag">` +
+    `Showing the proposed plan averaged across <b>${ens.trials}</b> randomized networks. ` +
+    `Terminal-target attainment rate: <b>${Math.round(targetRate * 100)}%</b>. ` +
+    `Scrub or play the timeline to inspect average weekly states.` +
+    `</div>`
+  );
   if(btn){ btn.disabled=false; btn.textContent="Run simulation plan"; }
   if(sbtn) sbtn.disabled=false;
   if(pbtn) pbtn.disabled=false;
@@ -1745,7 +1791,7 @@ function buildForward(){
       <div class="progressbox" id="progressbox">
         <div class="proghead"><span>Running trials <b id="progcount">0 / 0</b></span><span id="progpct">0%</span></div>
         <div class="progbar"><div class="progfill" id="progfill"></div></div>
-        <div class="progmini"><span>live final mean: <b id="progmean">—</b></span><span>survival: <b id="progsurv">—</b></span></div>
+        <div class="progmini"><span>live final mean: <b id="progmean">—</b></span><span>threshold rate: <b id="progsurv">—</b></span></div>
       </div>
       <div id="dirtyflag"></div>
     </div>
@@ -1824,7 +1870,7 @@ function buildReverse(){
       <div class="progressbox" id="progressbox">
         <div class="proghead"><span>Running trials <b id="progcount">0 / 0</b></span><span id="progpct">0%</span></div>
         <div class="progbar"><div class="progfill" id="progfill"></div></div>
-        <div class="progmini"><span>live final mean: <b id="progmean">—</b></span><span>survival: <b id="progsurv">—</b></span></div>
+        <div class="progmini"><span>live final mean: <b id="progmean">—</b></span><span>threshold rate: <b id="progsurv">—</b></span></div>
       </div>
       <div id="planrunstatus"></div>
     </div>
@@ -1924,10 +1970,24 @@ function renderForwardOutcome(){
   const ens=S.res.ensemble;
   let cls,ic,head,sub;
   const avgWord = ens ? " on average" : "";
-  if(term>=Nmin){ cls="ok";ic="▲";head="Thrives — self-sustaining";
-    sub=`Settles around ${term.toFixed(1)} active${avgWord}, above the quorum of ${Nmin}. The club holds itself up.`; }
-  else if(term>=Math.max(2,Nmin*0.35)){ cls="ok";ic="●";head="Survives as a committed core";
-    sub=`Holds ~${term.toFixed(1)}${avgWord} below the formal quorum (${Nmin}) — alive on loyalty, but in the fragile basin.`; }
+  if(term>=Nmin){
+    cls="ok";
+    ic="▲";
+    head="Finishes above quorum";
+    sub=
+      `The terminal-window mean is ${term.toFixed(1)}${avgWord}, ` +
+      `above the quorum of ${Nmin}. ` +
+      `Persistence beyond the simulated horizon is not established.`;
+  }
+  else if(term>=Math.max(2,Nmin*0.35)){
+    cls="ok";
+    ic="●";
+    head="Retains a terminal core";
+    sub=
+      `The terminal-window mean is ${term.toFixed(1)}${avgWord}, ` +
+      `below the formal quorum (${Nmin}). ` +
+      `This is a finite-horizon outcome, not evidence of a stable basin.`;
+  }
   else if(pk>Nmin*0.7){ cls="no";ic="▽";head="Spikes, then collapses";
     sub=`Peaks near ${pk.toFixed(1)} but decays to ~${term.toFixed(1)}. Early buzz without a structure to hold it.`; }
   else { cls="no";ic="▾";head="Fades out";
@@ -1939,7 +1999,7 @@ function renderForwardOutcome(){
       <div class="costcard"><div class="k">Peak</div><div class="v">${pk.toFixed(1)}</div></div>
       <div class="costcard"><div class="k">End-of-term</div><div class="v">${term.toFixed(1)}</div></div>
       <div class="costcard"><div class="k">Final reach</div><div class="v">${Math.round(snaps[snaps.length-1].m.filter(x=>x>0.4).length/S.res.model.n*100)}%</div></div>
-      ${ens?`<div class="costcard"><div class="k">Survival prob.</div><div class="v">${Math.round(ens.survivalRate*100)}%</div></div>`:''}
+      ${ens?`<div class="costcard"><div class="k">Quorum rate</div><div class="v">${Math.round(ens.survivalRate*100)}%</div></div>`:''}
       ${ens?`<div class="costcard"><div class="k">IQR final</div><div class="v">${ens.q1Final.toFixed(1)}–${ens.q3Final.toFixed(1)}</div></div>`:''}
     </div>
     <div class="note">${ens?`Averaged across <b>${ens.trials}</b> randomized network trials. The orange band on the chart is the middle 50% of trial outcomes. Press <b>Play</b> or scrub the timeline to inspect the average club state week by week; use <b>Run sample</b> to animate one concrete randomized network.`:'This is one randomized sample run. Press <b>Play</b> or scrub the timeline to watch motivation move through that network week by week.'}</div>`;
@@ -2011,22 +2071,22 @@ function doPlan(){
     if(!out.feasible){
       panel.innerHTML=`<h2><span class="dot"></span>Plan</h2>
         <div class="verdict no"><div class="ic">⚠</div><div class="tx">
-          <b>Out of reach within this budget</b>
-          <span>Even at maximum effort the club tops out around <b>${out.achieved.toFixed(1)}</b> active — short of your ${(+S.rev.Astar).toFixed(1)} target. This is a structural ceiling, not a search failure.</span></div></div>
+          <b>No feasible plan found by this search</b>
+          <span>The maximum-control starting configuration tested reaches approximately <b>${out.achieved.toFixed(1)}</b> active over the terminal window, below the ${(+S.rev.Astar).toFixed(1)} target. This does not prove that the target is structurally infeasible.</span>
         <ol class="steps">
           <li><div class="t"><b>Loosen a constraint.</b> Raise the visibility ceiling, allow more events, or permit early-weeks mentoring.</div></li>
           <li><div class="t"><b>Or shift regime.</b> A stabilizing club (lower quorum, stronger self-reinforcement) reaches higher turnout for the same effort — sometimes the real fix is the club's format, not its promotion.</div></li>
-          <li><div class="t"><b>Or lower the target.</b> The trajectory now showing is the best this budget achieves.</div></li>
+          <li><div class="t"><b>Or lower the target.</b> The trajectory now showing is the maximum-control starting configuration tested by this run.</div></li>
         </ol>
-        <div class="note">The displayed run is the maximum-effort attempt. Feasibility is judged on end-of-term attendance (last 4 weeks).</div>`;
+        <div class="note">The displayed run is the maximum-control starting configuration. The heuristic may miss feasible schedules with different timings. Feasibility is judged by the final-four-week mean.</div>
     } else {
       const ins=instructions(out.config, S.rev, out.res);
       let steps='';
       ins.steps.forEach(s=> steps+=`<li><div class="t"><b>${s.h}.</b> ${s.t}</div></li>`);
       panel.innerHTML=`<h2><span class="dot"></span>Your plan</h2>
         <div class="verdict ok"><div class="ic">✓</div><div class="tx">
-          <b>Reachable — here's the lightest-touch plan</b>
-          <span>Lands at ~<b>${out.achieved.toFixed(1)}</b> active by end of term (target ${(+S.rev.Astar).toFixed(1)}).</span></div></div>
+          <b>Feasible plan found by the heuristic</b>
+          <span>On the deterministic reference realization, the final-four-week mean is approximately <b>${out.achieved.toFixed(1)}</b> (target ${(+S.rev.Astar).toFixed(1)}). This is the lowest-cost feasible plan encountered, not a guaranteed global optimum.</span>
         <ol class="steps">${steps}</ol>
         <div class="costrow">
           <div class="costcard"><div class="k">Events</div><div class="v">${out.config.events.length}</div></div>
