@@ -323,7 +323,7 @@
   <div class="foot">
     Trajectories are illustrative qualitative regimes, not calibrated forecasts: headcounts are on the model's own scale,
     and the aim is to show which behaviors the network structure produces and how interventions move between them.
-    <div class="cite">Based on <i>Participation Diffusion Dynamics in Influence-Driven Networks</i>, Hudson&nbsp;Dong.</div>
+    <div class="cite">Based on <i>State-Dependent Participation Diffusion on Adaptive Influence Networks</i>, Hudson&nbsp;Dong.</div>
     <div class="bio">Full creation including ideation, website, code, and interface by Hudson Dong, Class of 2027, Stuyvesant High School, New York City.</div>
   </div>
 </div>
@@ -580,12 +580,28 @@ class Model {
     const gv = ctrl.gv ?? 1;
     const K = ctrl.K ?? 1e9;
     const scaff = ctrl.scaff || null;
-
+    
+    // Store the period-t state so each recorded snapshot is aligned
+    // with the period-t actions and realized participation.
+    const stateAtT = {
+      m: this.m.slice(),
+      L: this.L.slice(),
+      F: this.F.slice(),
+      E: this.E.slice(),
+      S: this.S.slice(),
+      act: this.act.slice(),
+      Phi: this.Phi.slice(),
+      omega: this.edges.map(e => e.w)
+    };
+    
     // action probabilities and attendance
     const mhat = new Array(n), Pa = new Array(n), Pp = new Array(n);
     const a = new Array(n), p = new Array(n);
     for (let i = 0; i < n; i++) {
-      mhat[i] = clip01(this.m[i] + G.betaE * (this.E[i] - 0.5));
+      mhat[i] = clip01(
+        this.m[i]
+        + (this.modulating ? G.betaE * (this.E[i] - 0.5) : 0)
+      );
       Pa[i] = sigm(r.kapA * (mhat[i] - this.thetaA[i]));
       Pp[i] = sigm(r.kapP * (mhat[i] - this.thetaP[i]));
       if (this.stochastic) {
@@ -639,8 +655,11 @@ class Model {
     }
 
     // reinforcement terms
-    const nuF = (i) => 1 + G.betaF * (0.5 - this.E[i]);
-    const nuR = (i) => 1 - G.betaR * (0.5 - this.E[i]);
+    const nuF = (i) =>
+      1 + (this.modulating ? G.betaF * (0.5 - this.E[i]) : 0);
+    
+    const nuR = (i) =>
+      1 - (this.modulating ? G.betaR * (0.5 - this.E[i]) : 0);
     const Ri = new Array(n).fill(0), Bi = new Array(n).fill(0);
     for (let i = 0; i < n; i++) {
       let pulse = 0;
@@ -663,7 +682,10 @@ class Model {
     // decay and gain
     const alpha = new Array(n), Fhat = new Array(n);
     for (let i = 0; i < n; i++) {
-      Fhat[i] = clip01(this.F[i] + G.kapEF * (0.5 - this.E[i]));
+      Fhat[i] = clip01(
+        this.F[i]
+        + (this.modulating ? G.kapEF * (0.5 - this.E[i]) : 0)
+      );
       const loyaltyProtection = 1 - r.etaL * (1 - G.kapSL * this.S[i]) * this.L[i];
       const fatigueAcceleration = 1 + r.etaF * Fhat[i];
       alpha[i] = clip01(this.alpha0[i] * loyaltyProtection * fatigueAcceleration);
@@ -749,11 +771,19 @@ class Model {
     this._refreshOmega(week + 1);
 
     return {
-      week, A,
-      Pa: Pa.slice(), atil: atil.slice(),
-      m: mN.slice(), L: LN.slice(), F: FN.slice(),
-      E: EN.slice(), S: SN.slice(), act: this.act.slice(),
-      alpha: alpha.slice(), Phi: this.Phi.slice()
+      week,
+      A,
+      Pa: Pa.slice(),
+      atil: atil.slice(),
+      m: stateAtT.m,
+      L: stateAtT.L,
+      F: stateAtT.F,
+      E: stateAtT.E,
+      S: stateAtT.S,
+      act: stateAtT.act,
+      alpha: alpha.slice(),
+      Phi: stateAtT.Phi,
+      omega: stateAtT.omega
     };
   }
 }
@@ -815,7 +845,7 @@ const PRESETS = {
   B:{ label:"B · Favorable & stable", regime:"stabilize",
       events:[{week:3,amp:0.35},{week:7,amp:0.35},{week:11,amp:0.35}], gv:1.4, K:18,
       scaffOn:false, scaffA:2,scaffB:6,gB:1.8, groupSize:8, inTies:4, outTies:1.5, acquaint:0, body:220, trials:250 },
-  C:{ label:"C · Reverse-planned rescue", regime:"collapse",
+  C:{ label:"C · Hand-specified finite-horizon rescue", regime:"collapse",
       events:[{week:2,amp:0.45},{week:5,amp:0.45},{week:8,amp:0.45},{week:12,amp:0.45}], gv:3.0, K:20, scaffOn:true, scaffA:2,scaffB:9,gB:1.4, groupSize:8, inTies:4, outTies:1.5, acquaint:0, body:220, trials:250 }
 };
 
@@ -922,9 +952,15 @@ function buildLayout(model, w, h, poolCount){
       px: 6.2832*hsh(i, 45.164), py: 6.2832*hsh(i, 94.673)
     };
   }
-  const edges = model.edges.map(e=>({i:e.i,j:e.j,w:e.w}))
-    .sort((a,b)=>b.w-a.w).slice(0, Math.round(n*1.6));
-
+  const edges = model.edges
+    .map((e, idx) => ({
+      i: e.i,
+      j: e.j,
+      w: e.w,
+      idx
+    }))
+    .sort((a, b) => b.w - a.w)
+    .slice(0, Math.round(n * 1.6));
   poolCount = poolCount||0;
   const pool=[];
   const clearR = R*0.96 + 8;
@@ -1163,11 +1199,21 @@ function drawNetwork(snap, t){
   }
   for(const e of L.edges){
     if(!(joinedAt(e.i) && joinedAt(e.j))) continue;
-    const pa=dpos[e.j], pb=dpos[e.i];
-    const act = (snap.act[e.i]>0.5 && snap.act[e.j]>0.5);
-    const a = (act?0.34:0.07) * clamp(e.w*1.4,0.12,1);
-    nctx.strokeStyle="rgba(150,140,200,"+a+")";
-    nctx.lineWidth = act ? 0.6+e.w*1.4 : 0.5;
+  
+    const pa = dpos[e.j];
+    const pb = dpos[e.i];
+    const act = snap.act[e.i] > 0.5 && snap.act[e.j] > 0.5;
+  
+    const ew = snap.omega
+      ? snap.omega[e.idx]
+      : e.w;
+  
+    const a =
+      (act ? 0.34 : 0.07)
+      * clamp(ew * 1.4, 0.12, 1);
+  
+    nctx.strokeStyle = "rgba(150,140,200," + a + ")";
+    nctx.lineWidth = act ? 0.6 + ew * 1.4 : 0.5;
     nctx.beginPath(); nctx.moveTo(pa.x,pa.y); nctx.lineTo(pb.x,pb.y); nctx.stroke();
   }
   const A=snap.A, alive=snap.act.filter(a=>a>0.5).length;
@@ -1458,6 +1504,11 @@ function averageRuns(runs, cfg){
   const meanFinal=mean(finals);
   let repIdx=0, best=Infinity;
   finals.forEach((x,i)=>{ const d=Math.abs(x-meanFinal); if(d<best){ best=d; repIdx=i; } });
+  for(let t = 0; t < T; t++){
+    snaps[t].omega = runs[repIdx].snaps[t].omega
+      ? runs[repIdx].snaps[t].omega.slice()
+      : null;
+  }
   const res={snaps, model:runs[repIdx].model};
   prepRunResult(res, cfg);
   res.ensemble={
