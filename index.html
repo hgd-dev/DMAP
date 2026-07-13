@@ -999,17 +999,16 @@ function controlCost(c){
   k += COST.capacity * Math.max(0, (+c.K) - COST.K0);
   return k;
 }
-
 function maxConfig(rev){
   const wks = [];
-  const m = Math.max(0,rev.maxEvents|0);
+  const m = Math.max(0, rev.maxEvents | 0);
 
-  for(let k = 0; k < m; k++){
+  for(let k=0; k<m; k++){
     wks.push({
-      week: 1 + Math.round(
+      week:1 + Math.round(
         k * Math.min(rev.T - 2, 12) / Math.max(1, m)
       ),
-      amp: rev.ampCap
+      amp:rev.ampCap
     });
   }
 
@@ -1034,19 +1033,108 @@ function maxConfig(rev){
   };
 }
 
+function spreadConfig(rev, startFraction, endFraction){
+  const c = maxConfig(rev);
+  const lastUsefulWeek = Math.max(1, rev.T - 1);
+  const m = Math.max(0, rev.maxEvents | 0);
+
+  const clampWeek = (w) =>
+    Math.max(
+      1,
+      Math.min(lastUsefulWeek, Math.round(w))
+    );
+
+  const startWeek =
+    clampWeek(startFraction * lastUsefulWeek);
+
+  const endWeek = Math.max(
+    startWeek,
+    clampWeek(endFraction * lastUsefulWeek)
+  );
+
+  c.events = [];
+
+  if(m === 1){
+    c.events.push({
+      week:endWeek,
+      amp:rev.ampCap
+    });
+  }
+  else if(m > 1){
+    for(let k=0; k<m; k++){
+      c.events.push({
+        week:clampWeek(
+          startWeek
+          + k * (endWeek - startWeek) / (m - 1)
+        ),
+        amp:rev.ampCap
+      });
+    }
+  }
+
+  return c;
+}
+
+function startingConfigs(rev){
+  return [
+    maxConfig(rev),
+    spreadConfig(rev, 0.10, 0.70),
+    spreadConfig(rev, 0.25, 0.80)
+  ];
+}
 function plan(rev){
   const tol = 0;
   const searchRng = mulberry32(SEED + 1);
   const simBudget = 400;
   
-  const maxC = maxConfig(rev);
-  const maxRes = window.PDE.simulate(cfgToOpts(maxC));
-  let simCount = 1;
-  const maxTerm = terminalA(maxRes.snaps);
-  if(maxTerm < rev.Astar - tol){
-    return { feasible:false, achieved:maxTerm, config:maxC, res:maxRes };
+  const starts = startingConfigs(rev);
+  const evaluatedStarts = [];
+  let simCount = 0;
+
+  for(const config of starts){
+    if(simCount >= simBudget) break;
+
+    const res =
+      window.PDE.simulate(cfgToOpts(config));
+
+    simCount++;
+
+    evaluatedStarts.push({
+      config,
+      res,
+      achieved:terminalA(res.snaps)
+    });
   }
-  let best = JSON.parse(JSON.stringify(maxC));
+
+  evaluatedStarts.sort(
+    (a,b) => b.achieved - a.achieved
+  );
+
+  const feasibleStarts = evaluatedStarts
+    .filter(
+      x => x.achieved >= rev.Astar - tol
+    )
+    .sort(
+      (a,b) =>
+        controlCost(a.config)
+        - controlCost(b.config)
+        || b.achieved - a.achieved
+    );
+
+  if(!feasibleStarts.length){
+    const strongest = evaluatedStarts[0];
+
+    return {
+      feasible:false,
+      achieved:strongest.achieved,
+      config:strongest.config,
+      res:strongest.res,
+      testedStarts:evaluatedStarts.length
+    };
+  }
+
+  let best = null;
+  let bestCost = Infinity;
   const ok = (c)=>{
     if(simCount >= simBudget) return false;
   
@@ -1129,8 +1217,26 @@ function plan(rev){
     return c;
   }
 
-  best = descend(maxC);
-  let bestCost = controlCost(best);
+    for(const start of feasibleStarts){
+    if(simCount >= simBudget) break;
+
+    const cand = descend(start.config);
+    const cc = controlCost(cand);
+
+    if(cc < bestCost){
+      best = cand;
+      bestCost = cc;
+    }
+  }
+
+  if(!best){
+    best = JSON.parse(
+      JSON.stringify(feasibleStarts[0].config)
+    );
+
+    bestCost = controlCost(best);
+  }
+
   for(let r=0;r<5 && simCount<simBudget;r++){
     const pert=JSON.parse(JSON.stringify(best));
     pert.gv=Math.min(rev.gvCap, +(pert.gv+searchRng()*0.8).toFixed(2));
@@ -1962,7 +2068,7 @@ function buildReverse(){
       <div class="row"><label class="toggle"><input type="checkbox" id="scaffAllow" ${r.scaffAllow?'checked':''}><span class="sw"></span>Allow early-weeks mentoring</label></div>
     </div>
     <div class="panel" id="planpanel" style="margin-top:11px">
-      <div class="empty">Set a target and budget, then press <b>Find a plan</b>. The planner first checks whether the goal is reachable, then strips back to the cheapest plan that still hits it.</div>
+      <div class="empty">Set a target and budget, then press <b>Find a plan</b>. The planner tests several high-intensity starting schedules, then strips back feasible candidates. Failure to find one does not prove that the target is impossible.</div>
     </div>`;
   wireReverse();
 }
@@ -2153,15 +2259,15 @@ function doPlan(){
           <div class="ic">⚠</div>
           <div class="tx">
             <b>No feasible plan found by this search</b>
-            <span>The maximum-control starting configuration tested reaches approximately <b>${out.achieved.toFixed(1)}</b> active over the terminal window, below the ${(+S.rev.Astar).toFixed(1)} target. This does not prove that the target is structurally infeasible.</span>
+            <span>The best ceiling-intensity starting configuration tested reaches approximately <b>${out.achieved.toFixed(1)}</b> active over the terminal window, below the ${(+S.rev.Astar).toFixed(1)} target. This does not prove that the target is structurally infeasible.</span>
           </div>
         </div>
         <ol class="steps">
           <li><div class="t"><b>Loosen a constraint.</b> Raise the visibility ceiling, allow more events, or permit early-weeks mentoring.</div></li>
           <li><div class="t"><b>Or shift regime.</b> A favorable regime with a lower quorum and stronger persistence parameters may reach higher turnout under the same control bounds.</div></li>
-          <li><div class="t"><b>Or lower the target.</b> The trajectory now showing is the maximum-control starting configuration tested by this run.</div></li>
+          <li><div class="t"><b>Or lower the target.</b> The trajectory now showing is the best ceiling-intensity starting configuration tested by this run.</div></li>
         </ol>
-        <div class="note">The displayed run is the maximum-control starting configuration. The heuristic may miss feasible schedules with different timings. Feasibility is judged by the final-four-week mean.</div>`;
+        <div class="note">The displayed run is the best of the ceiling-intensity starting configurations tested. The heuristic may still miss feasible schedules with other timings. Feasibility is judged by the final-four-week mean.</div>`;
     } else {
       const ins=instructions(out.config, S.rev, out.res);
       let steps='';
@@ -2183,7 +2289,7 @@ function doPlan(){
         <div class="note">${ins.frame} &nbsp;The run on the right shows this exact plan — scrub it to see how the network fills in.</div>`;
     }
     setPlanButtonsEnabled(!!S.planCfg);
-    setPlanStatus(!!S.planCfg ? '<div class="dirtyflag">Plan ready. Use <b>Run sample plan</b> for one randomized realization or <b>Run simulation plan</b> for aggregate averages using the proposed plan.</div>' : '<div class="dirtyflag">No feasible plan was generated, so plan testing is unavailable until you adjust the budget or target and find a reachable plan.</div>');
+    setPlanStatus(!!S.planCfg ? '<div class="dirtyflag">Plan ready. Use <b>Run sample plan</b> for one randomized realization or <b>Run simulation plan</b> for aggregate averages using the proposed plan.</div>' : '<div class="dirtyflag">No feasible plan was found by the current search, so plan testing is unavailable until you adjust the control bounds or target and run the heuristic again.</div>');
     btn.textContent="Find a plan"; btn.disabled=false;
   }, 30);
 }
