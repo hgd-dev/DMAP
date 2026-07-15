@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Diffusion Model Explorer</title>
+        <title>Diffusion Model Analyst and Pathfinder</title>
         <style>
             :root {
                 --p0: #0d0887;
@@ -61,7 +61,7 @@
                 letter-spacing: -.01em
             }
             .wrap {
-                max-width: 1240px;
+                max-width: 1520px;
                 margin: 0 auto;
                 padding: 22px 18px 50px
             }
@@ -125,12 +125,12 @@
             }
             .grid {
                 display: grid;
-                grid-template-columns: minmax(400px, 448px) minmax(0, 760px);
-                gap: 14px;
+                grid-template-columns: minmax(400px, 448px) minmax(0, 1020px);
+                gap: 18px;
                 align-items: start;
                 justify-content: center
             }
-            @media(max-width:980px) {
+            @media(max-width:1120px) {
                 .grid {
                     grid-template-columns: 1fr
                 }
@@ -139,10 +139,10 @@
                 position: sticky;
                 top: 12px;
                 align-self: start;
-                max-width: 760px;
+                max-width: 1020px;
                 width: 100%
             }
-            @media(max-width:980px) {
+            @media(max-width:1120px) {
                 .vizcol {
                     position: static
                 }
@@ -211,7 +211,7 @@
                 align-items: center
             }
             .valbox {
-                width: 50px;
+                width: 64px;
                 font: 600 12px/1 var(--mono);
                 color: var(--ink);
                 background: var(--panel2);
@@ -494,11 +494,71 @@
                 left: 16px;
                 background: #fff
             }
+            /* editable initialization distributions */
+            .initcontrols {
+                transition: opacity .16s
+            }
+            .distedit {
+                margin-top: 10px;
+                padding: 9px 10px 8px;
+                background: var(--panel2);
+                border: 1px solid var(--line);
+                border-radius: 10px
+            }
+            .distedit .dh {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-bottom: 5px
+            }
+            .distedit .dh b {
+                color: var(--ink);
+                font-size: 11.5px;
+                font-weight: 650
+            }
+            .distedit .dh span {
+                color: var(--ink3);
+                font: 600 10px var(--mono)
+            }
+            .distcv {
+                display: block;
+                width: 100%;
+                height: 66px;
+                border-radius: 7px;
+                background: #0b0912;
+                border: 1px solid var(--line);
+                cursor: ns-resize;
+                touch-action: none
+            }
+            .distaxis {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 3px;
+                color: var(--ink3);
+                font: 600 9px var(--mono)
+            }
+            .initactions {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin-top: 10px
+            }
+            .initactions .chip {
+                flex: none
+            }
+            .initnote {
+                color: var(--ink3);
+                font-size: 10.5px;
+                line-height: 1.4
+            }
             /* visualization column */
             .viz {
                 position: relative;
-                max-width: 760px;
-                background: radial-gradient(700px 420px at 50% 38%, rgba(106, 0, 168, .10), transparent 70%),
+                max-width: 1020px;
+                background: radial-gradient(940px 600px at 50% 38%, rgba(106, 0, 168, .10), transparent 70%),
                     linear-gradient(180deg, var(--panel), #0a0912);
                 border: 1px solid var(--line);
                 border-radius: 15px;
@@ -654,6 +714,28 @@
             /* chart */
             .chartwrap {
                 margin-top: 10px
+            }
+            .chartwrap.preview-hidden {
+                display: none
+            }
+            .previewbanner {
+                display: none;
+                margin: 9px 2px 4px;
+                padding: 8px 10px;
+                border: 1px solid rgba(122, 162, 255, .22);
+                background: rgba(122, 162, 255, .07);
+                border-radius: 8px;
+                color: var(--ink2);
+                font-size: 11px;
+                line-height: 1.45
+            }
+            .previewbanner.on {
+                display: block
+            }
+            .turnoutnote {
+                margin: 7px 2px 0;
+                color: var(--ink3);
+                font: 600 10px/1.45 var(--mono)
             }
             #chartcv {
                 display: block;
@@ -980,8 +1062,8 @@
             <header class="top">
                 <div class="brand">
                     <div class="eyebrow">Interactive Participation Dynamics Simulator</div>
-                    <h1>Diffusion Model Explorer</h1>
-                    <div class="sub">An agent-based diffusion model (ABM) of how a collective grows, plateaus, or collapses across time and how a well-timed plan can rescue it. Each core node is a simulated agent; hover over to see individual data.</div>
+                    <h1>Diffusion Model Analyst and Pathfinder</h1>
+                    <div class="sub">An agent-based diffusion model (ABM) of how a collective grows, plateaus, or collapses across time and how a well-timed plan can explosively growth it or rescue it. Each core node is a simulated agent in our network; hover over to see individual data.</div>
                 </div>
                 <div class="modeseg" id="modeseg">
                     <button data-mode="forward" class="on">Forward &middot; Predict</button>
@@ -1018,22 +1100,24 @@
                             </div>
                         </div>
                         <div class="netwrap">
-                            <canvas id="netcv" width="760" height="396"></canvas>
+                            <canvas id="netcv" width="980" height="520"></canvas>
                             <div class="nodetip" id="nodetip"></div>
                         </div>
+                        <div class="previewbanner" id="previewbanner"></div>
                         <div class="legend">
                             <div class="lgrad"><span>motivation</span>
                                 <div class="bar"></div><span>0 &rarr; 1</span>
                                 <div class="ring" style="margin-left:14px"></div><span>arc = commitment</span>
                             </div>
                             <div class="lkey">
-                                <i><span class="d" style="background:var(--p4)"></span>member (here)</i>
-                                <i><span class="d" style="background:var(--p4);opacity:.4"></span>member (absent)</i>
+                                <i><span class="d" style="background:var(--p4)"></span>active modeled member</i>
+                                <i><span class="d" style="background:var(--p4);opacity:.4"></span>inactive / left member</i>
                                 <i><span class="d" style="background:#c79ce0"></span>illustrative reach (not modeled)</i>
-                                <i><span class="d" style="background:#564f78;box-shadow:0 0 0 2px rgba(122,162,255,.7)"></span>modeled core agent</i>
+                                <i><span class="d" style="background:#564f78;box-shadow:0 0 0 2px rgba(122,162,255,.7)"></span>prospective core agent</i>
                             </div>
                         </div>
-                        <div class="chartwrap">
+                        <div class="turnoutnote">Turnout is the sum of capacity-adjusted attendance contributions, not a count of agents whose raw propensity exceeds 50%.</div>
+                        <div class="chartwrap" id="chartwrap">
                             <div class="transport" id="transportbar">
                                 <button class="play" id="playbtn" title="Play / pause">
                                     <svg id="playicon" viewBox="0 0 24 24">
@@ -1045,7 +1129,7 @@
                                     <input type="range" class="wide" id="scrub" min="0" max="17" value="0" step="1">
                                 </div>
                             </div>
-                            <canvas id="chartcv" width="760" height="188"></canvas>
+                            <canvas id="chartcv" width="980" height="188"></canvas>
                             <div class="ovl" id="overlays">
                                 <button class="o on" data-ov="A" style="color:var(--p4)"><span class="sw"></span>Attendance</button>
                                 <button class="o" data-ov="m" style="color:#7aa2ff"><span class="sw"></span>Mean motivation</button>
@@ -1091,6 +1175,24 @@
                 let z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
                 let x = mean + sd * z;
                 return Math.min(hi, Math.max(lo, x));
+            }
+            // Draw from a user-edited week-1 distribution. This affects only
+            // initialization; all subsequent state equations are unchanged.
+            function weightedBinDraw(rng, weights) {
+                if (!Array.isArray(weights) || !weights.length) return rng();
+                let total = 0;
+                for (const w of weights) total += Math.max(0, +w || 0);
+                if (total <= 1e-12) return rng();
+                let u = rng() * total,
+                    idx = weights.length - 1;
+                for (let i = 0; i < weights.length; i++) {
+                    u -= Math.max(0, +weights[i] || 0);
+                    if (u <= 0) {
+                        idx = i;
+                        break;
+                    }
+                }
+                return clip01((idx + rng()) / weights.length);
             }
             // Regime presets. Per-node values are drawn from (mean, sd).
             const REGIMES = {
@@ -1327,12 +1429,41 @@
                     this.rho = arr(() => gdraw(rng, ...r.rho, 0.3, 3.0));
                     this.h0 = arr(() => gdraw(rng, ...r.h0, 0.0, 0.3));
                     this.Ebar = arr(() => gdraw(rng, ...r.E0, 0.0, 1.0));
-                    this.m = arr(() => gdraw(rng, ...r.m0, 0.0, 1.0));
-                    this.L = arr(() => gdraw(rng, ...r.L0, 0.0, 1.0));
-                    this.F = arr(() => gdraw(rng, ...r.F0, 0.0, 1.0));
+                    const init = opts.init || null;
+                    this.m = init && init.mWeights ?
+                        arr(() => weightedBinDraw(rng, init.mWeights)) :
+                        arr(() => gdraw(rng, ...r.m0, 0.0, 1.0));
+                    this.L = init && init.LWeights ?
+                        arr(() => weightedBinDraw(rng, init.LWeights)) :
+                        arr(() => gdraw(rng, ...r.L0, 0.0, 1.0));
+                    this.F = init && init.FWeights ?
+                        arr(() => weightedBinDraw(rng, init.FWeights)) :
+                        arr(() => gdraw(rng, ...r.F0, 0.0, 1.0));
                     this.E = this.Ebar.slice();
                     this.S = arr(() => 0.0);
                     this.act = arr(() => 1.0);
+                    this.initialMember = arr(() => 1.0);
+                    if (init) {
+                        const members = Math.max(
+                            0,
+                            Math.min(n, Math.round(+init.members || 0))
+                        );
+                        const order = Array.from({
+                            length: n
+                        }, (_, i) => i);
+                        for (let i = n - 1; i > 0; i--) {
+                            const j = Math.floor(rng() * (i + 1));
+                            const tmp = order[i];
+                            order[i] = order[j];
+                            order[j] = tmp;
+                        }
+                        this.act.fill(0.0);
+                        this.initialMember.fill(0.0);
+                        for (let k = 0; k < members; k++) {
+                            this.act[order[k]] = 1.0;
+                            this.initialMember[order[k]] = 1.0;
+                        }
+                    }
                     this.mbar = this.m.slice();
                     this.mvar = arr(() => 0.0);
                     this.Phi = arr(() => 1.0);
@@ -1690,8 +1821,23 @@
                 const mean = (arr) => arr.reduce((s, x) => s + x, 0) / (arr.length || 1);
                 // defaults and presets
                 const SEED = 11;
-                const NET_H = 396,
+                const BASE_NET_H = 520,
                     CHART_H = 188; // canvas heights (CSS px)
+
+                function netHeightFor(n) {
+                    const nn = Math.max(1, Math.round(+n || 1));
+                    if (nn >= 350) return 760;
+                    if (nn >= 220) return 680;
+                    if (nn >= 120) return 600;
+                    return BASE_NET_H;
+                }
+
+                function currentNetH() {
+                    const n = S.res && S.res.model ?
+                        S.res.model.n :
+                        (S.mode === "forward" ? S.cfg.n : S.rev.n);
+                    return netHeightFor(n);
+                }
                 const DEF = {
                     forward: {
                         n: 36,
@@ -1713,7 +1859,12 @@
                         outTies: 1.5,
                         acquaint: 0,
                         body: 220,
-                        trials: 250
+                        trials: 250,
+                        initCustom: false,
+                        initMembers: 36,
+                        initM: null,
+                        initL: null,
+                        initF: null
                     }
                 };
                 const PRESETS = {
@@ -1801,6 +1952,17 @@
                         Astar: 9,
                         T: 18,
                         regime: "collapse",
+                        n: 36,
+                        groupSize: 8,
+                        inTies: 4,
+                        outTies: 1.5,
+                        acquaint: 0,
+                        body: 220,
+                        initCustom: false,
+                        initMembers: 36,
+                        initM: null,
+                        initL: null,
+                        initF: null,
                         maxEvents: 4,
                         ampCap: 0.6,
                         gvCap: 4.0,
@@ -1835,6 +1997,56 @@
                     planCfg: null,
                     _progressCfg: null
                 };
+                const DIST_BINS = 12;
+
+                function gaussianWeights(mean0, sd0) {
+                    const sd = Math.max(0.025, +sd0 || 0.1);
+                    const a = [];
+                    for (let i = 0; i < DIST_BINS; i++) {
+                        const x = (i + 0.5) / DIST_BINS;
+                        a.push(Math.exp(-0.5 * ((x - mean0) / sd) ** 2));
+                    }
+                    return a;
+                }
+
+                function regimeWeights(regime, field) {
+                    const pair = window.PDE.REGIMES[regime][field];
+                    return gaussianWeights(pair[0], pair[1]);
+                }
+
+                function resetInitDistributions(c) {
+                    c.initM = regimeWeights(c.regime, "m0");
+                    c.initL = regimeWeights(c.regime, "L0");
+                    c.initF = regimeWeights(c.regime, "F0");
+                }
+
+                function ensureInitConfig(c) {
+                    c.initCustom = !!c.initCustom;
+                    c.initMembers = Math.max(
+                        0,
+                        Math.min(+c.n || 0, Math.round(
+                            c.initMembers == null ? (+c.n || 0) : +c.initMembers
+                        ))
+                    );
+                    if (!Array.isArray(c.initM) || c.initM.length !== DIST_BINS ||
+                        !Array.isArray(c.initL) || c.initL.length !== DIST_BINS ||
+                        !Array.isArray(c.initF) || c.initF.length !== DIST_BINS) {
+                        resetInitDistributions(c);
+                    }
+                    return c;
+                }
+
+                function initOpts(c) {
+                    ensureInitConfig(c);
+                    if (!c.initCustom) return null;
+                    return {
+                        members: c.initMembers,
+                        mWeights: c.initM.slice(),
+                        LWeights: c.initL.slice(),
+                        FWeights: c.initF.slice()
+                    };
+                }
+
                 // engine options
                 function cfgToOpts(c) {
                     return {
@@ -1848,6 +2060,7 @@
                         inTies: +(c.inTies ?? 4),
                         outTies: +(c.outTies ?? 1.5),
                         acquaint: +(c.acquaint ?? 0),
+                        init: initOpts(c),
                         ctrl: {
                             events: c.events.map(e => ({
                                 week: Math.max(0, +e.week - 1),
@@ -1882,6 +2095,7 @@
                     c.acquaint = +(c.acquaint ?? base.acquaint ?? 0);
                     c.body = +(c.body ?? base.body ?? 220);
                     c.trials = +(c.trials ?? base.trials ?? 250);
+                    ensureInitConfig(c);
                     return c;
                 }
 
@@ -1899,35 +2113,42 @@
                         net = model.net;
                     const cx = w / 2,
                         cy = h / 2;
-                    const R = Math.min(w, h) * 0.37; // active collective cluster: compact, sits within the population
+                    const minDim = Math.min(w, h);
+                    const R = Math.max(130, minDim * 0.46 - 10);
+                    const innerR = Math.max(76, Math.min(R * 0.48, minDim * 0.19));
+                    const nodeScale = clamp(Math.sqrt(120 / Math.max(120, n)), 0.52, 1);
+                    const hsh = (i, seed) => {
+                        const x = Math.sin((i + 1) * seed) * 43758.5453;
+                        return x - Math.floor(x);
+                    };
                     const byComm = {};
                     for (let i = 0; i < n; i++) {
                         (byComm[net.comm[i]] ||= []).push(i);
                     }
-                    const radIdx = new Array(n),
-                        radCnt = new Array(n);
+                    const pos = new Array(n);
+                    const communityCount = Math.max(2, net.C || Object.keys(byComm).length);
+                    const sectorWidth = 2 * Math.PI / communityCount;
                     for (const c in byComm) {
                         const list = byComm[c];
-                        // sort by angle so within-petal order is tidy
+                        const sector = (+c / communityCount) * 2 * Math.PI;
+                        const lanes = Math.max(1, Math.ceil(Math.sqrt(list.length)));
+                        const usableSpan = Math.min(sectorWidth * 0.76, 0.46);
                         list.forEach((i, k) => {
-                            radIdx[i] = k;
-                            radCnt[i] = list.length;
+                            const areaFrac = (k + 0.55) / Math.max(1, list.length);
+                            const r = Math.sqrt(
+                                innerR * innerR +
+                                areaFrac * (R * R - innerR * innerR)
+                            );
+                            const lane = k % lanes;
+                            const laneFrac = lanes > 1 ? lane / (lanes - 1) - 0.5 : 0;
+                            const jitter = (hsh(i, 19.191) - 0.5) * usableSpan * 0.18;
+                            const th = sector + laneFrac * usableSpan + jitter;
+                            pos[i] = {
+                                x: cx + r * Math.cos(th),
+                                y: cy + r * Math.sin(th)
+                            };
                         });
                     }
-                    const pos = new Array(n);
-                    for (let i = 0; i < n; i++) {
-                        const frac = radCnt[i] > 1 ? radIdx[i] / (radCnt[i] - 1) : 0.5;
-                        const r = R * (0.40 + 0.60 * frac);
-                        const th = net.ang[i];
-                        pos[i] = {
-                            x: cx + r * Math.cos(th),
-                            y: cy + r * Math.sin(th)
-                        };
-                    }
-                    const hsh = (i, s) => {
-                        const x = Math.sin((i + 1) * s) * 43758.5453;
-                        return x - Math.floor(x);
-                    };
                     const drift = new Array(n);
                     for (let i = 0; i < n; i++) {
                         drift[i] = {
@@ -1987,6 +2208,8 @@
                         cx,
                         cy,
                         R,
+                        innerR,
+                        nodeScale,
                         pos,
                         drift,
                         edges,
@@ -2027,7 +2250,7 @@
                         });
                     }
                     return {
-                        n: 36,
+                        n: rev.n,
                         regime: rev.regime,
                         seed: SEED,
                         T: rev.T,
@@ -2038,12 +2261,17 @@
                         scaffA: 1,
                         scaffB: 6,
                         gB: 2.0,
-                        groupSize: 8,
-                        inTies: 4,
-                        outTies: 1.5,
-                        acquaint: 0,
-                        body: 220,
-                        trials: 250
+                        groupSize: rev.groupSize,
+                        inTies: rev.inTies,
+                        outTies: rev.outTies,
+                        acquaint: rev.acquaint,
+                        body: rev.body,
+                        trials: 250,
+                        initCustom: rev.initCustom,
+                        initMembers: rev.initMembers,
+                        initM: rev.initM ? rev.initM.slice() : null,
+                        initL: rev.initL ? rev.initL.slice() : null,
+                        initF: rev.initF ? rev.initF.slice() : null
                     };
                 }
 
@@ -2430,8 +2658,8 @@
 
                 function drawNetwork(snap, t) {
                     t = t || 0;
-                    const W = netcv.clientWidth || 760,
-                        H = NET_H;
+                    const W = netcv.clientWidth || 980,
+                        H = currentNetH();
                     const {
                         w,
                         h
@@ -2442,7 +2670,8 @@
                     }
                     const L = S.res.layout,
                         model = S.res.model,
-                        dr = L.drift;
+                        dr = L.drift,
+                        nodeScale = L.nodeScale || 1;
                     const dpos = new Array(model.n);
                     for (let i = 0; i < model.n; i++) {
                         const d = dr[i],
@@ -2554,7 +2783,15 @@
                     }
                     const A = snap.A;
                     const breathe = 1 + 0.06 * Math.sin(t * 0.0016);
-                    const hubR = 14 + Math.sqrt(Math.max(0, A)) * 3.0;
+                    const hubLabel = "COLLECTIVE";
+                    const hubCount = S.res.preview ? "—" : String(Math.round(A));
+                    nctx.font = "700 12px ui-monospace,monospace";
+                    const labelWidth = nctx.measureText(hubLabel).width;
+                    nctx.font = "700 14px ui-monospace,monospace";
+                    const countWidth = nctx.measureText(hubCount).width;
+                    const minimumHubR = Math.max(labelWidth, countWidth) / 2 + 10;
+                    const turnoutHubR = 14 + Math.sqrt(Math.max(0, A)) * 3.0;
+                    const hubR = Math.max(minimumHubR, Math.min(68, turnoutHubR));
                     const glowR = hubR * 1.7 * breathe;
                     const hg = nctx.createRadialGradient(L.cx, L.cy, 2, L.cx, L.cy, glowR);
                     hg.addColorStop(0, "rgba(252,166,54,.55)");
@@ -2562,23 +2799,23 @@
                     hg.addColorStop(1, "rgba(177,42,144,0)");
                     nctx.fillStyle = hg;
                     nctx.beginPath();
-                    nctx.arc(L.cx, L.cy, glowR, 0, 7);
+                    nctx.arc(L.cx, L.cy, glowR, 0, Math.PI * 2);
                     nctx.fill();
                     nctx.fillStyle = "#1a0f1e";
                     nctx.strokeStyle = "rgba(252,166,54,.85)";
                     nctx.lineWidth = 2;
                     nctx.beginPath();
-                    nctx.arc(L.cx, L.cy, hubR, 0, 7);
+                    nctx.arc(L.cx, L.cy, hubR, 0, Math.PI * 2);
                     nctx.fill();
                     nctx.stroke();
                     nctx.fillStyle = "#fca636";
                     nctx.font = "700 12px ui-monospace,monospace";
                     nctx.textAlign = "center";
                     nctx.textBaseline = "middle";
-                    nctx.fillText("COLLECTIVE", L.cx, L.cy - 5);
+                    nctx.fillText(hubLabel, L.cx, L.cy - 6);
                     nctx.fillStyle = "#ece9f5";
                     nctx.font = "700 14px ui-monospace,monospace";
-                    nctx.fillText(Math.round(A), L.cx, L.cy + 9);
+                    nctx.fillText(hubCount, L.cx, L.cy + 10);
                     const sm = (a, b, x) => {
                         x = clamp((x - a) / (b - a), 0, 1);
                         return x * x * (3 - 2 * x);
@@ -2590,10 +2827,11 @@
                             active = snap.act[i] > 0.5;
                         const joined = joinedAt(i);
                         const attend = clamp(snap.Pa ? snap.Pa[i] : 1, 0, 1);
-                        const baseR = 6 + attend * 3.2;
+                        const baseR = (6 + attend * 3.2) * nodeScale;
                         const em = sm(0.10, 0.52, m);
                         if (S.hoverType !== "pool" && i === S.hoverNode) {
-                            const rr = (joined && !active ? baseR * 0.8 : 2.6 + em * (baseR - 2.6)) + 4.5;
+                            const minCoreR = 2.6 * nodeScale;
+                            const rr = (joined && !active ? baseR * 0.8 : minCoreR + em * (baseR - minCoreR)) + 4.5 * nodeScale;
                             nctx.save();
                             nctx.shadowColor = "rgba(255,255,255,.9)";
                             nctx.shadowBlur = 10;
@@ -2608,31 +2846,32 @@
                             nctx.globalAlpha = 0.58;
                             nctx.fillStyle = "#2c2940";
                             nctx.beginPath();
-                            nctx.arc(p.x, p.y, Math.max(4.8, baseR * 0.8), 0, 7);
+                            nctx.arc(p.x, p.y, Math.max(3.0, baseR * 0.8), 0, 7);
                             nctx.fill();
                             nctx.setLineDash([3, 2]);
                             nctx.strokeStyle = "rgba(239,90,122,.72)";
                             nctx.lineWidth = 1.45;
                             nctx.beginPath();
-                            nctx.arc(p.x, p.y, Math.max(6.8, baseR * 0.8 + 2.4), 0, 7);
+                            nctx.arc(p.x, p.y, Math.max(4.2, baseR * 0.8 + 2.4 * nodeScale), 0, 7);
                             nctx.stroke();
                             nctx.strokeStyle = "rgba(140,135,170,.55)";
                             nctx.lineWidth = .9;
                             nctx.beginPath();
-                            nctx.arc(p.x, p.y, Math.max(4.8, baseR * 0.8), 0, 7);
+                            nctx.arc(p.x, p.y, Math.max(3.0, baseR * 0.8), 0, 7);
                             nctx.stroke();
                             nctx.setLineDash([]);
                             nctx.globalAlpha = 1;
                             continue;
                         }
-                        const r = 2.6 + em * (baseR - 2.6);
+                        const minCoreR = 2.6 * nodeScale;
+                        const r = minCoreR + em * (baseR - minCoreR);
                         const col = emColor(m, em);
                         const pa = (0.55 + 0.45 * em) * (0.5 + 0.5 * clamp(attend * 1.5, 0, 1));
                         if (em > 0.6 && m > 0.55 && attend > 0.3) {
                             nctx.globalAlpha = (m - 0.55) * 0.5 * attend * em;
                             nctx.fillStyle = plasma(m);
                             nctx.beginPath();
-                            nctx.arc(p.x, p.y, r + 5, 0, 7);
+                            nctx.arc(p.x, p.y, r + 5 * nodeScale, 0, 7);
                             nctx.fill();
                             nctx.globalAlpha = 1;
                         }
@@ -2642,13 +2881,13 @@
                         nctx.strokeStyle = joined ? "rgba(252,166,54,.48)" : "rgba(122,162,255,.68)";
                         nctx.lineWidth = ringW;
                         nctx.beginPath();
-                        nctx.arc(p.x, p.y, Math.max(5.8, r + 5.0), 0, 7);
+                        nctx.arc(p.x, p.y, Math.max(3.8, r + 5.0 * nodeScale), 0, 7);
                         nctx.stroke();
                         nctx.globalAlpha = 1;
                         nctx.globalAlpha = Math.max(pa, em < 0.30 ? 0.42 : pa);
                         nctx.fillStyle = col;
                         nctx.beginPath();
-                        nctx.arc(p.x, p.y, Math.max(r, em < 0.20 ? 3.2 : r), 0, 7);
+                        nctx.arc(p.x, p.y, Math.max(r, em < 0.20 ? 2.4 : r), 0, 7);
                         nctx.fill();
                         if (em > 0.18) {
                             nctx.strokeStyle = "rgba(0,0,0,.35)";
@@ -2660,10 +2899,10 @@
                         if (Lo > 0.02 && em > 0.06) {
                             nctx.globalAlpha = em;
                             nctx.strokeStyle = "rgba(252,200,80,.95)";
-                            nctx.lineWidth = 2.4;
+                            nctx.lineWidth = Math.max(1.35, 2.4 * nodeScale);
                             nctx.lineCap = "round";
                             nctx.beginPath();
-                            nctx.arc(p.x, p.y, r + 3.2, -Math.PI / 2, -Math.PI / 2 + Lo * 2 * Math.PI);
+                            nctx.arc(p.x, p.y, r + 3.2 * nodeScale, -Math.PI / 2, -Math.PI / 2 + Lo * 2 * Math.PI);
                             nctx.stroke();
                             nctx.lineCap = "butt";
                         }
@@ -2672,7 +2911,7 @@
                 }
 
                 function drawChart(weekIdx) {
-                    const W = chartcv.clientWidth || 760,
+                    const W = chartcv.clientWidth || 980,
                         H = CHART_H;
                     const {
                         w,
@@ -2879,32 +3118,46 @@
                             s.m.filter(x => x > 0.4).length / n * 100
                         );
                     document.getElementById("sA").textContent =
-                        Math.round(s.A);
+                        S.res.preview ? "—" : Math.round(s.A);
                     document.getElementById("sM").textContent =
                         mean(s.m).toFixed(2);
                     document.getElementById("sAlive").textContent =
                         activeAgents.toFixed(1);
                     document.getElementById("sReach").innerHTML = reach + '<small>%</small>';
                     document.getElementById("vizttl").textContent =
+                        S.res.preview ?
+                        "Initial network preview · before week 1" :
                         S.resultMode === "ensemble" ?
                         "Average network state · week " + (S.week + 1) :
                         "Network state · week " + (S.week + 1);
                     document.getElementById("wklabel").textContent =
+                        S.res.preview ?
+                        "initial state" :
                         "wk " + (S.week + 1) + " / " + S.res.snaps.length;
                     document.getElementById("scrub").value = S.week;
                 }
 
                 function updateTimelineControls() {
-                    const bar = document.getElementById("transportbar");
-                    if (!bar) return;
-                    bar.style.display = S.res ? "flex" : "none";
+                    const bar = document.getElementById("transportbar"),
+                        chartwrap = document.getElementById("chartwrap"),
+                        banner = document.getElementById("previewbanner");
+                    const preview = !!(S.res && S.res.preview);
+                    if (bar) bar.style.display = S.res && !preview ? "flex" : "none";
+                    if (chartwrap) chartwrap.classList.toggle("preview-hidden", preview);
+                    if (banner) {
+                        banner.classList.toggle("on", preview);
+                        banner.innerHTML = preview ?
+                            '<b>Initial-state preview.</b> This shows the configured membership, network, and state distributions before any weekly transition is applied. Run a sample or simulation to calculate turnout and the trajectory.' :
+                            '';
+                    }
                 }
 
                 function renderFrame() {
+                    if (!S.res) return;
                     updateTimelineControls();
                     const s = S.res.snaps[S.week];
                     drawNetwork(s, S.clock);
-                    drawChart(S.week);
+                    if (!S.res.preview) drawChart(S.week);
                     updateStats();
                 }
                 // animation loop
@@ -2929,6 +3182,112 @@
                     }
                     if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(ambient);
                 }
+                // Initial-state preview. This constructs the configured network and
+                // displays its week-1 state without advancing any transition equation.
+                let previewTimer = null;
+
+                function cancelInitialPreview() {
+                    if (previewTimer) {
+                        clearTimeout(previewTimer);
+                        previewTimer = null;
+                    }
+                }
+
+                function initialPreviewConfig() {
+                    if (S.mode === "forward") return S.cfg;
+                    return {
+                        n: S.rev.n,
+                        regime: S.rev.regime,
+                        seed: SEED,
+                        T: S.rev.T,
+                        groupSize: S.rev.groupSize,
+                        inTies: S.rev.inTies,
+                        outTies: S.rev.outTies,
+                        acquaint: S.rev.acquaint,
+                        body: S.rev.body,
+                        initCustom: S.rev.initCustom,
+                        initMembers: S.rev.initMembers,
+                        initM: S.rev.initM,
+                        initL: S.rev.initL,
+                        initF: S.rev.initF
+                    };
+                }
+
+                function showInitialPreview(c) {
+                    if (S.running || !c) return;
+                    ensureInitConfig(c);
+                    stop();
+                    clearHover();
+                    const model = new Model({
+                        n: +c.n,
+                        regime: c.regime,
+                        seed: +c.seed || SEED,
+                        stochastic: false,
+                        modulating: true,
+                        groupSize: +(c.groupSize ?? 8),
+                        inTies: +(c.inTies ?? 4),
+                        outTies: +(c.outTies ?? 1.5),
+                        acquaint: +(c.acquaint ?? 0),
+                        init: initOpts(c)
+                    });
+                    const n = model.n,
+                        r = model.R,
+                        G = model.G;
+                    const Pa = new Array(n);
+                    for (let i = 0; i < n; i++) {
+                        const mhat = clip01(
+                            model.m[i] +
+                            G.betaE * (model.E[i] - 0.5)
+                        );
+                        Pa[i] = sigm(r.kapA * (mhat - model.thetaA[i]));
+                    }
+                    const snap = {
+                        week: 0,
+                        A: 0,
+                        Pa,
+                        atil: new Array(n).fill(0),
+                        m: model.m.slice(),
+                        L: model.L.slice(),
+                        F: model.F.slice(),
+                        E: model.E.slice(),
+                        S: model.S.slice(),
+                        act: model.act.slice(),
+                        alpha: model.alpha0.slice(),
+                        Phi: model.Phi.slice(),
+                        omega: model.edges.map(e => e.w)
+                    };
+                    const res = {
+                        snaps: [snap],
+                        model,
+                        preview: true,
+                        joined: model.initialMember.map(x => x > 0.5 ? 0 : Infinity)
+                    };
+                    const outside = Math.max(0, (+c.body || 0) - n);
+                    res.layout = buildLayout(
+                        model,
+                        netcv.clientWidth || 980,
+                        netHeightFor(n),
+                        outside
+                    );
+                    res.recruit = [0];
+                    S.res = res;
+                    S.resultMode = "preview";
+                    S.week = 0;
+                    S.refLines.Nmin = window.PDE.REGIMES[c.regime].Nmin;
+                    document.getElementById("scrub").max = 0;
+                    renderFrame();
+                    if (S.mode === "forward") renderForwardOutcome();
+                }
+
+                function scheduleInitialPreview(delay = 140) {
+                    if (S.running) return;
+                    cancelInitialPreview();
+                    previewTimer = setTimeout(() => {
+                        previewTimer = null;
+                        showInitialPreview(initialPreviewConfig());
+                    }, delay);
+                }
+
                 // simulation runners
                 function computeRecruitment(snaps, cfg, poolCount) {
                     const rec = new Array(snaps.length);
@@ -2949,23 +3308,39 @@
                     return rec;
                 }
 
-                function prepRunResult(res, cfg) {
+                function assignJoinedTimes(res, cfg) {
                     const n = res.model.n,
-                        joinTH = 0.4;
+                        joinTH = 0.4,
+                        custom = !!cfg.initCustom && Array.isArray(res.model.initialMember);
                     res.joined = new Array(n).fill(Infinity);
+                    if (custom) {
+                        for (let i = 0; i < n; i++) {
+                            if (res.model.initialMember[i] > 0.5) res.joined[i] = 0;
+                        }
+                    }
                     res.snaps.forEach((s, t) => {
                         for (let i = 0; i < n; i++) {
-                            if (res.joined[i] === Infinity && s.Pa && s.Pa[i] > joinTH) res.joined[i] = t;
+                            const emerges = custom ?
+                                (s.act && s.act[i] > 0.5 && s.Pa && s.Pa[i] > joinTH) :
+                                (s.Pa && s.Pa[i] > joinTH);
+                            if (res.joined[i] === Infinity && emerges) res.joined[i] = t;
                         }
                     });
+                }
+
+                function prepRunResult(res, cfg) {
+                    const n = res.model.n;
+                    assignJoinedTimes(res, cfg);
                     const outside = Math.max(0, (+cfg.body || 0) - n);
-                    res.layout = buildLayout(res.model, netcv.clientWidth || 760, NET_H, outside);
+                    res.layout = buildLayout(res.model, netcv.clientWidth || 980, currentNetH(), outside);
                     res.recruit = computeRecruitment(res.snaps, cfg, res.layout.pool.length);
                     return res;
                 }
 
                 function runSim(cfg) {
+                    cancelInitialPreview();
                     const res = prepRunResult(window.PDE.simulate(cfgToOpts(cfg)), cfg);
+                    res.preview = false;
                     S.res = res;
                     S.refLines.Nmin = window.PDE.REGIMES[cfg.regime].Nmin;
                     document.getElementById("scrub").max = res.snaps.length - 1;
@@ -3072,6 +3447,7 @@
                 }
 
                 function runSampleSimulation() {
+                    cancelInitialPreview();
                     if (S.mode !== "forward" || S.running) return;
                     readForwardCfg();
                     stop();
@@ -3101,6 +3477,7 @@
                     play();
                 }
                 async function runEnsembleSimulation() {
+                    cancelInitialPreview();
                     if (S.mode !== "forward" || S.running) return;
                     readForwardCfg();
                     stop();
@@ -3167,6 +3544,7 @@
                 }
 
                 function runPlanSample() {
+                    cancelInitialPreview();
                     if (S.mode !== "reverse" || S.running || !S.planCfg) return;
                     stop();
                     clearHover();
@@ -3193,6 +3571,7 @@
                     play();
                 }
                 async function runPlanEnsemble() {
+                    cancelInitialPreview();
                     if (S.mode !== "reverse" || S.running || !S.planCfg) return;
                     stop();
                     clearHover();
@@ -3265,7 +3644,7 @@
                         stop();
                         return;
                     }
-                    if (!S.res) return;
+                    if (!S.res || S.res.preview) return;
                     if (S.week >= S.res.snaps.length - 1) S.week = 0;
                     S.playing = true;
                     setPlayIcon(true);
@@ -3341,6 +3720,224 @@
                     return h;
                 }
 
+                function initId(prefix, name) {
+                    return prefix + name;
+                }
+
+                function distMoments(weights) {
+                    let total = 0,
+                        mu = 0;
+                    for (let i = 0; i < weights.length; i++) {
+                        const w = Math.max(0, +weights[i] || 0);
+                        const x = (i + 0.5) / weights.length;
+                        total += w;
+                        mu += w * x;
+                    }
+                    if (total <= 1e-12) return {
+                        mean: 0.5,
+                        sd: 0.0
+                    };
+                    mu /= total;
+                    let vv = 0;
+                    for (let i = 0; i < weights.length; i++) {
+                        const w = Math.max(0, +weights[i] || 0);
+                        const x = (i + 0.5) / weights.length;
+                        vv += w * (x - mu) ** 2;
+                    }
+                    return {
+                        mean: mu,
+                        sd: Math.sqrt(vv / total)
+                    };
+                }
+
+                function distributionEditorHTML(prefix, key, title) {
+                    const cid = initId(prefix, "dist" + key);
+                    const sid = initId(prefix, "dist" + key + "stats");
+                    return `<div class="distedit">
+      <div class="dh"><b>${title}</b><span id="${sid}">mean — · spread —</span></div>
+      <canvas class="distcv" id="${cid}" width="360" height="66" data-prefix="${prefix}" data-key="${key}"></canvas>
+      <div class="distaxis"><span>0 · low</span><span>drag bars to edit</span><span>1 · high</span></div>
+    </div>`;
+                }
+
+                function initializationCardHTML(c, prefix) {
+                    ensureInitConfig(c);
+                    const customId = initId(prefix, "initCustom");
+                    const membersId = initId(prefix, "initMembers");
+                    const boxId = initId(prefix, "initControls");
+                    const resetId = initId(prefix, "resetInit");
+                    return `<div class="panel">
+      <h2><span class="dot"></span>Initialization</h2>
+      <div class="row"><label class="toggle"><input type="checkbox" id="${customId}" ${c.initCustom?'checked':''}><span class="sw"></span>Use an existing group's starting state</label></div>
+      <div class="hint">When enabled, these values replace only the week-1 membership and motivation/commitment/fatigue draws. The transition equations remain unchanged.</div>
+      <div class="initcontrols" id="${boxId}" style="${c.initCustom?'':'opacity:.42;pointer-events:none'}">
+        ${srow("Current active membership",membersId,0,Math.max(0,+c.n),1,c.initMembers,"(week 1)")}
+        <div class="hint">Membership is the number of modeled agents initially active. The distributions below describe the full modeled network at week 1.</div>
+        ${distributionEditorHTML(prefix,"M","Motivation distribution")}
+        ${distributionEditorHTML(prefix,"L","Loyalty / commitment distribution")}
+        ${distributionEditorHTML(prefix,"F","Fatigue distribution")}
+        <div class="initactions">
+          <div class="initnote">Bar heights are relative frequencies; sampling remains seeded and reproducible.</div>
+          <button class="chip" id="${resetId}">reset to regime</button>
+        </div>
+      </div>
+    </div>`;
+                }
+
+                function drawDistributionEditor(canvas, weights) {
+                    if (!canvas) return;
+                    const W = Math.max(240, Math.round(canvas.getBoundingClientRect().width || 360));
+                    const H = 66;
+                    const dpr = Math.min(2, window.devicePixelRatio || 1);
+                    canvas.width = Math.round(W * dpr);
+                    canvas.height = Math.round(H * dpr);
+                    canvas.style.height = H + "px";
+                    const ctx = canvas.getContext("2d");
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    ctx.clearRect(0, 0, W, H);
+                    const pad = 5,
+                        baseY = H - 6,
+                        innerH = H - 13,
+                        gap = 2,
+                        bw = (W - pad * 2 - gap * (weights.length - 1)) / weights.length;
+                    let mx = Math.max(...weights.map(x => Math.max(0, +x || 0)), 1e-6);
+                    ctx.strokeStyle = "rgba(255,255,255,.07)";
+                    ctx.lineWidth = 1;
+                    for (const y of [0.25, 0.5, 0.75]) {
+                        ctx.beginPath();
+                        ctx.moveTo(pad, baseY - y * innerH);
+                        ctx.lineTo(W - pad, baseY - y * innerH);
+                        ctx.stroke();
+                    }
+                    for (let i = 0; i < weights.length; i++) {
+                        const h = Math.max(2, Math.max(0, +weights[i] || 0) / mx * innerH);
+                        const x = pad + i * (bw + gap);
+                        ctx.fillStyle = plasma((i + 0.5) / weights.length);
+                        ctx.globalAlpha = 0.86;
+                        ctx.fillRect(x, baseY - h, bw, h);
+                    }
+                    ctx.globalAlpha = 1;
+                    const moments = distMoments(weights);
+                    const meanX = pad + moments.mean * (W - pad * 2);
+                    ctx.strokeStyle = "rgba(255,255,255,.9)";
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(meanX, 3);
+                    ctx.lineTo(meanX, baseY + 1);
+                    ctx.stroke();
+                    const stats = document.getElementById(canvas.id + "stats");
+                    if (stats) {
+                        stats.textContent = "mean " + moments.mean.toFixed(2) + " · spread " + moments.sd.toFixed(2);
+                    }
+                }
+
+                function drawInitializationEditors(c, prefix) {
+                    drawDistributionEditor(
+                        document.getElementById(initId(prefix, "distM")),
+                        c.initM
+                    );
+                    drawDistributionEditor(
+                        document.getElementById(initId(prefix, "distL")),
+                        c.initL
+                    );
+                    drawDistributionEditor(
+                        document.getElementById(initId(prefix, "distF")),
+                        c.initF
+                    );
+                }
+
+                function setInitEnabled(c, prefix, enabled) {
+                    c.initCustom = !!enabled;
+                    const box = document.getElementById(initId(prefix, "initControls"));
+                    if (box) {
+                        box.style.opacity = enabled ? "1" : ".42";
+                        box.style.pointerEvents = enabled ? "auto" : "none";
+                    }
+                }
+
+                function syncInitMembershipBound(c, prefix) {
+                    const sid = initId(prefix, "initMembers");
+                    const slider = document.getElementById(sid),
+                        box = document.getElementById(sid + "v");
+                    if (!slider || !box) return;
+                    const max = Math.max(0, Math.round(+c.n || 0));
+                    slider.max = max;
+                    box.max = max;
+                    const requested = c.initCustom ? (+slider.value || 0) : max;
+                    const v = Math.max(0, Math.min(max, Math.round(requested)));
+                    slider.value = v;
+                    box.value = v;
+                    c.initMembers = v;
+                }
+
+                function wireDistributionEditor(c, prefix, key, onChange) {
+                    const canvas = document.getElementById(initId(prefix, "dist" + key));
+                    if (!canvas) return;
+                    const prop = "init" + key;
+                    let dragging = false;
+                    const edit = (ev) => {
+                        const rect = canvas.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(rect.width - 1, ev.clientX - rect.left));
+                        const y = Math.max(0, Math.min(rect.height, ev.clientY - rect.top));
+                        const idx = Math.max(0, Math.min(
+                            DIST_BINS - 1,
+                            Math.floor(x / rect.width * DIST_BINS)
+                        ));
+                        c[prop][idx] = Math.max(0.01, Math.min(1, 1 - y / rect.height));
+                        drawDistributionEditor(canvas, c[prop]);
+                        onChange();
+                    };
+                    canvas.addEventListener("pointerdown", ev => {
+                        dragging = true;
+                        canvas.setPointerCapture(ev.pointerId);
+                        edit(ev);
+                    });
+                    canvas.addEventListener("pointermove", ev => {
+                        if (dragging) edit(ev);
+                    });
+                    const end = ev => {
+                        dragging = false;
+                        if (canvas.hasPointerCapture && canvas.hasPointerCapture(ev.pointerId)) {
+                            canvas.releasePointerCapture(ev.pointerId);
+                        }
+                    };
+                    canvas.addEventListener("pointerup", end);
+                    canvas.addEventListener("pointercancel", end);
+                }
+
+                function wireInitialization(c, prefix, onChange) {
+                    ensureInitConfig(c);
+                    const custom = document.getElementById(initId(prefix, "initCustom"));
+                    const reset = document.getElementById(initId(prefix, "resetInit"));
+                    wireSrow(initId(prefix, "initMembers"), null, v => {
+                        c.initMembers = Math.round(+v || 0);
+                        onChange();
+                    });
+                    if (custom) custom.addEventListener("change", e => {
+                        setInitEnabled(c, prefix, e.target.checked);
+                        if (!e.target.checked) {
+                            c.initMembers = +c.n;
+                            resetInitDistributions(c);
+                            const sid = initId(prefix, "initMembers");
+                            const slider = document.getElementById(sid),
+                                box = document.getElementById(sid + "v");
+                            if (slider) slider.value = c.initMembers;
+                            if (box) box.value = c.initMembers;
+                            drawInitializationEditors(c, prefix);
+                        }
+                        onChange();
+                    });
+                    if (reset) reset.addEventListener("click", () => {
+                        resetInitDistributions(c);
+                        drawInitializationEditors(c, prefix);
+                        onChange();
+                    });
+                    wireDistributionEditor(c, prefix, "M", onChange);
+                    wireDistributionEditor(c, prefix, "L", onChange);
+                    wireDistributionEditor(c, prefix, "F", onChange);
+                    requestAnimationFrame(() => drawInitializationEditors(c, prefix));
+                }
+
                 function buildForward() {
                     const c = S.cfg;
                     controls.innerHTML = `
@@ -3370,7 +3967,7 @@
     </div>
     <div class="panel">
       <h2><span class="dot"></span>Setup</h2>
-      ${srow("Agents (network size)","n",8,120,2,c.n)}
+      ${srow("Agents (network size)","n",8,500,2,c.n)}
       <div class="row"><label>Regime</label>
         <div class="seg" id="regime" style="width:260px">
           <button data-r="collapse" class="${c.regime==='collapse'?'on':''}">Collapse-prone</button>
@@ -3379,15 +3976,16 @@
       <div class="hint">The collapse-prone regime has a higher quorum and faster decay; the favorable regime has a lower quorum and stronger persistence parameters.</div>
       ${srow("Weeks to simulate","T",4,52,1,c.T)}
     </div>
+    ${initializationCardHTML(c,"")}
     <div class="panel">
       <h2><span class="dot"></span>Social network &amp; reach</h2>
       <div class="hint">How agents are connected, and how far the collective can reach beyond its core.</div>
-      ${srow("Group size","groupSize",3,16,1,c.groupSize,"(communities)")}
-      ${srow("Close ties","inTies",0,16,1,c.inTies,"(inside group)")}
-      ${srow("Bridge ties","outTies",0,8,0.5, (+c.outTies).toFixed(1),"(across groups)")}
-      ${srow("Extra acquaintance ties","acquaint",0,40,1,c.acquaint,"(global weak ties)")}
-      ${srow("Illustrative public dots","body",0,700,10,c.body,"(display only)")}
-      <div class="hint" style="margin-top:8px">Close ties stay inside friend groups; bridge ties jump between groups. Both are randomized each run.</div>
+      ${srow("Group size","groupSize",3,100,1,c.groupSize,"(communities)")}
+      ${srow("Close ties","inTies",0,99,1,c.inTies,"(inside group)")}
+      ${srow("Bridge ties","outTies",0,50,0.5, (+c.outTies).toFixed(1),"(across groups)")}
+      ${srow("Extra acquaintance ties","acquaint",0,2500,10,c.acquaint,"(global weak ties)")}
+      ${srow("Illustrative public dots","body",0,3000,25,c.body,"(display only)")}
+      <div class="hint" style="margin-top:8px">Close ties stay inside friend groups; bridge ties jump between groups. Both are randomized each run. Large networks and dense tie settings may take noticeably longer, especially across many trials.</div>
     </div>
     <div class="panel">
       <h2><span class="dot"></span>Events &amp; momentum</h2>
@@ -3395,7 +3993,7 @@
       ${eventEditorHTML(c.events)}
       <div style="margin-top:14px">
         ${srow("Visibility&nbsp;γ<sub>v</sub>","gv",1,8,0.1, (+c.gv).toFixed(1),"(promotion)")}
-        ${srow("Capacity scale&nbsp;K","K",2,100,1,c.K,"(smooth congestion)")}
+        ${srow("Capacity scale&nbsp;K","K",2,500,1,c.K,"(smooth congestion)")}
       </div>
     </div>
     <div class="panel">
@@ -3414,6 +4012,7 @@
     <div class="panel" id="outpanel" style="margin-top:16px"></div>`;
                     wireForward();
                     renderForwardOutcome();
+                    scheduleInitialPreview(0);
                     if (S.dirty) {
                         const df = document.getElementById("dirtyflag");
                         if (df) df.innerHTML = '<div class="dirtyflag">Settings changed. Press <b>Run sample</b> for one animated network or <b>Run simulation</b> for aggregate averages.</div>';
@@ -3426,7 +4025,7 @@
     <div class="panel">
       <h2><span class="dot"></span>Goal</h2>
       <div class="hint">Set a final-four-week attendance target; the heuristic searches for a low-cost feasible plan.</div>
-      ${srow("Target terminal-window attendance","Astar",1,60,0.5, (+r.Astar).toFixed(1))}
+      ${srow("Target terminal-window attendance","Astar",1,500,0.5, (+r.Astar).toFixed(1))}
       <div class="row"><label>Regime</label>
         <div class="seg" id="rregime" style="width:260px">
           <button data-r="collapse" class="${r.regime==='collapse'?'on':''}">Collapse-prone</button>
@@ -3434,6 +4033,18 @@
         </div></div>
       ${srow("Weeks available","rT",4,52,1,r.T)}
     </div>
+    <div class="panel">
+      <h2><span class="dot"></span>Network setup</h2>
+      <div class="hint">Choose the modeled core network and its surrounding illustrative population before the planner searches.</div>
+      ${srow("Agents (network size)","rn",8,500,2,r.n)}
+      ${srow("Group size","rgroupSize",3,100,1,r.groupSize,"(communities)")}
+      ${srow("Close ties","rinTies",0,99,1,r.inTies,"(inside group)")}
+      ${srow("Bridge ties","routTies",0,50,0.5, (+r.outTies).toFixed(1),"(across groups)")}
+      ${srow("Extra acquaintance ties","racquaint",0,2500,10,r.acquaint,"(global weak ties)")}
+      ${srow("Illustrative public dots","rbody",0,3000,25,r.body,"(display only)")}
+      <div class="hint" style="margin-top:8px">These settings are held fixed while the planner searches over events, visibility, capacity, and optional mentoring. Larger networks and denser ties substantially increase planning time.</div>
+    </div>
+    ${initializationCardHTML(r,"r")}
     <div class="panel runpanel planrunpanel">
       <h2><span class="dot"></span>Planner action</h2>
       <div class="hint">After setting the target and control bounds, press this to search for a lower-cost feasible plan. The result is not guaranteed to be globally optimal.</div>
@@ -3455,13 +4066,14 @@
       ${srow("Max events","maxEvents",0,12,1,r.maxEvents)}
       ${srow("Max event intensity","ampCap",0.1,1.5,0.05, (+r.ampCap).toFixed(2))}
       ${srow("Max visibility γ<sub>v</sub>","gvCap",1,8,0.1, (+r.gvCap).toFixed(1))}
-      ${srow("Room capacity ceiling","Kceil",2,100,1,r.Kceil)}
+      ${srow("Room capacity ceiling","Kceil",2,500,1,r.Kceil)}
       <div class="row"><label class="toggle"><input type="checkbox" id="scaffAllow" ${r.scaffAllow?'checked':''}><span class="sw"></span>Allow early-weeks mentoring</label></div>
     </div>
     <div class="panel" id="planpanel" style="margin-top:11px">
       <div class="empty">Set a target and budget, then press <b>Find a plan</b>. The planner tests several high-intensity starting schedules, then strips back feasible candidates. Failure to find one does not prove that the target is impossible.</div>
     </div>`;
                     wireReverse();
+                    scheduleInitialPreview(0);
                 }
                 // wiring
                 function readForwardCfg() {
@@ -3476,6 +4088,8 @@
                     c.acquaint = +val("acquaint");
                     c.body = +val("body");
                     c.trials = +val("trials");
+                    c.initCustom = document.getElementById("initCustom").checked;
+                    c.initMembers = +val("initMembers");
                     c.scaffOn = document.getElementById("scaffOn").checked;
                     c.scaffA = +val("scaffA");
                     c.scaffB = +val("scaffB");
@@ -3494,7 +4108,11 @@
                 const val = (id) => document.getElementById(id).value;
 
                 function wireForward() {
-                    wireSrow("n", null, markDirty);
+                    wireSrow("n", null, v => {
+                        S.cfg.n = +v;
+                        syncInitMembershipBound(S.cfg, "");
+                        markDirty();
+                    });
                     wireSrow("T", null, markDirty);
                     wireSrow("gv", v => (+v).toFixed(1), markDirty);
                     wireSrow("K", null, markDirty);
@@ -3505,6 +4123,7 @@
                     wireSrow("acquaint", null, markDirty);
                     wireSrow("body", null, markDirty);
                     wireSrow("trials", null, markDirty);
+                    wireInitialization(S.cfg, "", markDirty);
                     ["scaffA", "scaffB"].forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.addEventListener("input", markDirty);
@@ -3525,14 +4144,24 @@
                             outTies: p.outTies,
                             acquaint: p.acquaint,
                             body: p.body,
-                            trials: p.trials
+                            trials: p.trials,
+                            initCustom: false,
+                            initMembers: DEF.forward.n,
+                            initM: null,
+                            initL: null,
+                            initF: null
                         });
+                        ensureInitConfig(S.cfg);
                         buildForward();
                     }));
                     controls.querySelectorAll("#regime button").forEach(b => b.addEventListener("click", () => {
                         controls.querySelectorAll("#regime button").forEach(x => x.classList.remove("on"));
                         b.classList.add("on");
                         S.cfg.regime = b.dataset.r;
+                        if (!S.cfg.initCustom) {
+                            resetInitDistributions(S.cfg);
+                            drawInitializationEditors(S.cfg, "");
+                        }
                         markDirty();
                     }));
                     document.getElementById("scaffOn").addEventListener("change", e => {
@@ -3589,7 +4218,8 @@
                     readForwardCfg();
                     S.dirty = true;
                     const df = document.getElementById("dirtyflag");
-                    if (df) df.innerHTML = '<div class="dirtyflag">Settings changed. Press <b>Run sample</b> for one animated network or <b>Run simulation</b> for aggregate averages.</div>';
+                    if (df) df.innerHTML = '<div class="dirtyflag">Settings changed. The right side now previews the new initial network; press <b>Run sample</b> or <b>Run simulation</b> to project it forward.</div>';
+                    scheduleInitialPreview();
                 }
 
                 function liveUpdate() {
@@ -3603,8 +4233,8 @@
                 function renderForwardOutcome() {
                     const el = document.getElementById("outpanel");
                     if (!el) return;
-                    if (!S.res) {
-                        el.innerHTML = '<div class="empty">Adjust the controls, then press <b>Run sample</b> for a single-network timeline or <b>Run simulation</b> for aggregate averages.</div>';
+                    if (!S.res || S.res.preview) {
+                        el.innerHTML = '<div class="empty">The initial network is shown on the right. Press <b>Run sample</b> for a single-network timeline or <b>Run simulation</b> for aggregate averages.</div>';
                         return;
                     }
                     const snaps = S.res.snaps,
@@ -3661,9 +4291,20 @@
                     wireSrow("Astar", v => (+v).toFixed(1), () => {
                         markPlanDirty();
                         S.refLines.Astar = +val("Astar");
-                        if (S.res) drawChart(S.week);
+                        if (S.res && !S.res.preview) drawChart(S.week);
                     });
                     wireSrow("rT", null, markPlanDirty);
+                    wireSrow("rn", null, v => {
+                        S.rev.n = +v;
+                        syncInitMembershipBound(S.rev, "r");
+                        markPlanDirty();
+                    });
+                    wireSrow("rgroupSize", null, markPlanDirty);
+                    wireSrow("rinTies", null, markPlanDirty);
+                    wireSrow("routTies", v => (+v).toFixed(1), markPlanDirty);
+                    wireSrow("racquaint", null, markPlanDirty);
+                    wireSrow("rbody", null, markPlanDirty);
+                    wireInitialization(S.rev, "r", markPlanDirty);
                     wireSrow("maxEvents", null, markPlanDirty);
                     wireSrow("ampCap", v => (+v).toFixed(2), markPlanDirty);
                     wireSrow("gvCap", v => (+v).toFixed(1), markPlanDirty);
@@ -3672,6 +4313,10 @@
                         controls.querySelectorAll("#rregime button").forEach(x => x.classList.remove("on"));
                         b.classList.add("on");
                         S.rev.regime = b.dataset.r;
+                        if (!S.rev.initCustom) {
+                            resetInitDistributions(S.rev);
+                            drawInitializationEditors(S.rev, "r");
+                        }
                         markPlanDirty();
                     }));
                     const scaff = document.getElementById("scaffAllow");
@@ -3698,13 +4343,22 @@
                         pbtn.disabled = false;
                         pbtn.textContent = "Find a plan";
                     }
-                    setPlanStatus('<div class="dirtyflag">Planner settings changed. Press <b>Find a plan</b> again before testing a sample or simulation.</div>');
+                    setPlanStatus('<div class="dirtyflag">Planner settings changed. The right side now previews the new initial network; press <b>Find a plan</b> again before testing it.</div>');
+                    scheduleInitialPreview();
                 }
 
                 function readRev() {
                     const r = S.rev;
                     r.Astar = +val("Astar");
                     r.T = +val("rT");
+                    r.n = +val("rn");
+                    r.groupSize = +val("rgroupSize");
+                    r.inTies = +val("rinTies");
+                    r.outTies = +val("routTies");
+                    r.acquaint = +val("racquaint");
+                    r.body = +val("rbody");
+                    r.initCustom = document.getElementById("rinitCustom").checked;
+                    r.initMembers = +val("rinitMembers");
                     r.maxEvents = +val("maxEvents");
                     r.ampCap = +val("ampCap");
                     r.gvCap = +val("gvCap");
@@ -3713,6 +4367,7 @@
                 }
 
                 function doPlan() {
+                    cancelInitialPreview();
                     readRev();
                     const btn = document.getElementById("planbtn");
                     S.planCfg = null;
@@ -3734,16 +4389,10 @@
                         S.week = 0;
                         S.res = out.res;
                         {
-                            const n = out.res.model.n,
-                                jt = 0.4;
-                            out.res.joined = new Array(n).fill(Infinity);
-                            out.res.snaps.forEach((s, t) => {
-                                for (let i = 0; i < n; i++) {
-                                    if (out.res.joined[i] === Infinity && s.Pa && s.Pa[i] > jt) out.res.joined[i] = t;
-                                }
-                            });
+                            const n = out.res.model.n;
+                            assignJoinedTimes(out.res, displayPlanCfg);
                             const outside = Math.max(0, (+displayPlanCfg.body || 0) - n);
-                            S.res.layout = buildLayout(out.res.model, netcv.clientWidth || 760, NET_H, outside);
+                            S.res.layout = buildLayout(out.res.model, netcv.clientWidth || 980, currentNetH(), outside);
                         }
                         S.res.recruit = computeRecruitment(S.res.snaps, displayPlanCfg, S.res.layout.pool.length);
                         S.refLines.Nmin = window.PDE.REGIMES[S.rev.regime].Nmin;
@@ -3809,9 +4458,6 @@
                         S.hoverType = "core";
                         S.planCfg = null;
                         buildReverse();
-                        if (S.res) {
-                            renderFrame();
-                        }
                     }
                 }));
                 document.getElementById("playbtn").addEventListener("click", play);
@@ -3851,40 +4497,43 @@
                     const jw = (S.res.joined && S.res.joined[i] !== undefined) ? S.res.joined[i] : Infinity;
                     const joined = jw <= S.week;
                     const enrolled = s.act && s.act[i] > 0.5;
-                    const attend = clamp(s.Pa ? s.Pa[i] : 0, 0, 1) * (joined ? (S.resultMode === "ensemble" ? (s.act ? s.act[i] : 1) : (enrolled ? 1 : 0)) : 0);
-                    const here = attend > 0.5;
-                    let status, color, attendText;
-                    if (S.resultMode === "ensemble") {
+                    const propensity = clamp(s.Pa ? s.Pa[i] : 0, 0, 1) * (enrolled ? 1 : 0);
+                    const contribution = clamp(s.atil ? s.atil[i] : 0, 0, 1);
+                    let status, color;
+                    if (S.res.preview) {
+                        status = enrolled ? "initial active member" : "prospective / inactive agent";
+                        color = enrolled ? "var(--good)" : "var(--ink3)";
+                    }
+                    else if (S.resultMode === "ensemble") {
                         status = joined ? "average role · emerged wk " + jw : "average latent role";
                         color = joined ? "var(--good)" : "var(--ink3)";
-                        attendText = joined ? Math.round(attend * 100) + "% expected" : "—";
+                    }
+                    else if (!joined) {
+                        status = "not yet involved";
+                        color = "var(--ink3)";
+                    }
+                    else if (!enrolled) {
+                        status = "left the collective";
+                        color = "var(--bad)";
                     }
                     else {
-                        if (!joined) {
-                            status = "not yet involved";
-                            color = "var(--ink3)";
-                        }
-                        else if (!enrolled) {
-                            status = "left the collective";
-                            color = "var(--bad)";
-                        }
-                        else {
-                            status = "member · joined wk " + jw;
-                            color = "var(--good)";
-                        }
-                        attendText = joined ? (here ? 'yes' : 'no') + ' · ' + Math.round(attend * 100) + '%' : '—';
+                        status = "member · joined wk " + jw;
+                        color = "var(--good)";
                     }
-                    return `<div class="nh">Agent #${i+1} <em>wk ${S.week}</em></div>
+                    const timeLabel = S.res.preview ? "initial" : "wk " + (S.week + 1);
+                    const contributionText = S.res.preview ? "not simulated" : contribution.toFixed(3);
+                    return `<div class="nh">Agent #${i+1} <em>${timeLabel}</em></div>
     <div class="nr"><span><span class="swatch" style="background:${plasma(m)}"></span>motivation</span><b>${m.toFixed(2)}</b></div>
     <div class="nr"><span>commitment</span><b>${Lo.toFixed(2)}</b></div>
     <div class="nr"><span>fatigue</span><b>${F.toFixed(2)}</b></div>
-    <div class="nr"><span>${S.resultMode==="ensemble"?'avg attendance':'attending'}</span><b style="color:${here?'var(--good)':'var(--ink3)'}">${attendText}</b></div>
+    <div class="nr"><span>attendance propensity</span><b>${Math.round(propensity * 100)}%</b></div>
+    <div class="nr"><span>turnout contribution</span><b>${contributionText}</b></div>
     <div class="nr"><span>status</span><b style="color:${color}">${status}</b></div>`;
                 }
                 const nodetip = document.getElementById("nodetip");
 
                 function placeTip(p) {
-                    const w = netcv.clientWidth || 760;
+                    const w = netcv.clientWidth || 980;
                     nodetip.style.left = Math.max(66, Math.min(w - 66, p.x)) + "px";
                     nodetip.style.top = p.y + "px";
                     nodetip.style.transform = (p.y < 70 ? "translate(-50%,16%)" : "translate(-50%,-114%)");
@@ -3904,9 +4553,9 @@
                         return;
                     }
                     const rect = netcv.getBoundingClientRect(),
-                        cssW = netcv.clientWidth || 760;
+                        cssW = netcv.clientWidth || 980;
                     const mx = (e.clientX - rect.left) * (cssW / rect.width),
-                        my = (e.clientY - rect.top) * (NET_H / rect.height);
+                        my = (e.clientY - rect.top) * (currentNetH() / rect.height);
                     let best = -1,
                         bestd = 1e9,
                         bestType = "core",
@@ -3961,12 +4610,16 @@
                     rt = setTimeout(() => {
                         if (S.res) {
                             const pc = S.res.layout && S.res.layout.pool ? S.res.layout.pool.length : 0;
-                            S.res.layout = buildLayout(S.res.model, netcv.clientWidth || 760, NET_H, pc);
+                            S.res.layout = buildLayout(S.res.model, netcv.clientWidth || 980, currentNetH(), pc);
                             renderFrame();
                         }
+                        if (S.mode === "forward") drawInitializationEditors(S.cfg, "");
+                        else drawInitializationEditors(S.rev, "r");
                     }, 150);
                 });
                 // boot
+                ensureInitConfig(S.cfg);
+                ensureInitConfig(S.rev);
                 buildForward();
                 if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(ambient);
             })();
