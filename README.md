@@ -1,11 +1,11 @@
 # Diffusion Model Analyst and Pathfinder
 
-**Diffusion Model Analyst and Pathfinder** is an interactive browser simulator for modeling how participation spreads, stabilizes, or collapses in a high-school club. It accompanies the paper *Participation Diffusion Dynamics in Influence-Driven Networks* and turns the paper’s agent-based diffusion model into a visual, explorable system.
+**Diffusion Model Analyst and Pathfinder** is an interactive browser simulator for modeling how participation spreads, stabilizes, or collapses in a collective. It accompanies the paper *State-Dependent Participation Diffusion on Adaptive Influence Networks* and turns the paper’s agent-based diffusion model into a visual, explorable system.
 
 The simulator runs entirely in the browser as a single HTML file. There are no dependencies, no build step, and no server required.
 
 ***Link:***
-[Diffusion Model Analyst and Pathfinder](https://hgd-dev.github.io/Diffusion-Model-Analyst-and-Pathfinder/)
+[Diffusion Model Analyst and Pathfinder](https://hgd-dev.github.io/DMAP/)
 
 ## Features
 
@@ -35,7 +35,7 @@ The simulator runs entirely in the browser as a single HTML file. There are no d
 Download or clone the repository, then open:
 
 ```text
-participation_diffusion_model_explorer.html
+index.html
 ```
 
 in any modern browser.
@@ -47,7 +47,7 @@ No installation is required.
 The simulator is also available at:
 
 ```text
-https://hgd-dev.github.io/Diffusion-Model-Explorer/
+https://hgd-dev.github.io/DMAP/
 ```
 
 ## How to use the simulator
@@ -133,11 +133,11 @@ The close-tie and bridge-tie controls affect the randomized graph ensemble. They
 ├── participation_diffusion_model_explorer.html
 ├── README.md
 ├── Paper/
-│   ├── Participation Diffusion Dynamics in Influence-Driven Networks - H. Dong.pdf
-│   ├── Participation Diffusion Dynamics in Influence-Driven Networks - H. Dong.tex
-├── Supplements/
-│   ├── Color Readout Supplement - H. Dong.pdf
-│   └── Color Readout Supplement - H. Dong.tex
+│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.pdf
+│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.tex
+├── ODD/
+│   ├── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.pdf
+│   └── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.tex
 └── LICENSE
 ```
 
@@ -146,7 +146,7 @@ The close-tie and bridge-tie controls affect the randomized graph ensemble. They
 Based on:
 
 ```text
-Hudson Dong. Participation Diffusion Dynamics in Influence-Driven Networks.
+Hudson Dong. State-Dependent Participation Diffusion on Adaptive Influence Networks.
 ```
 
 ## License
