@@ -1,6 +1,6 @@
 # Diffusion Model Analyst and Pathfinder
 
-**Diffusion Model Analyst and Pathfinder** is an interactive browser simulator for modeling how participation spreads, stabilizes, or collapses in a collective. It accompanies the paper *State-Dependent Participation Diffusion on Adaptive Influence Networks* and turns the paper’s agent-based diffusion model into a visual, explorable system.
+**Diffusion Model Analyst and Pathfinder** is an interactive browser simulator for modeling how outreach spreads, stabilizes, or collapses in a collective. It accompanies the paper *State-Dependent Participation Diffusion on Adaptive Influence Networks* and turns the paper’s agent-based diffusion model into a visual, explorable system.
 
 The simulator runs entirely in the browser as a single HTML file. There are no dependencies, no build step, and no server required.
 
@@ -10,10 +10,10 @@ The simulator runs entirely in the browser as a single HTML file. There are no d
 ## Features
 
 * **Forward prediction mode**
-  Configure a club’s network, events, visibility, capacity, and mentoring structure, then simulate how participation evolves across a semester.
+  Configure a collective’s network, events, visibility, capacity, and mentoring structure, then simulate how impact and participation evolve across a timeframe.
 
 * **Single-network sample runs**
-  Press **Run sample** to generate one randomized social network and watch the club grow, plateau, or collapse week by week.
+  Press **Run sample** to generate one randomized social network and watch the collective grow, plateau, or collapse week by week.
 
 * **Monte Carlo ensemble simulations**
   Press **Run simulation** to run many randomized trials and view average weekly outcomes, uncertainty bands, survival probability, and final turnout ranges.
@@ -25,10 +25,10 @@ The simulator runs entirely in the browser as a single HTML file. There are no d
   After a reverse-mode plan is generated, test it using either one randomized sample or a full ensemble simulation.
 
 * **Interactive network visualization**
-  Each core network node represents a simulated student. Color shows motivation, the loyalty arc shows accumulated commitment, and hover readouts show individual motivation, loyalty, fatigue, attendance, and status.
+  Each core network node represents a simulated agent. Color shows motivation, the loyalty arc shows accumulated commitment, and hover readouts show individual motivation, loyalty, fatigue, attendance, and status.
 
 * **Public-body visualization layer**
-  The surrounding faint dots represent the wider student body outside the modeled core network. Drawn-in public members show broader reach from events and acquaintance pathways without changing the underlying behavioral equations.
+  The surrounding faint dots represent the wider population body outside the modeled core network. Drawn-in public members show broader reach from events and acquaintance pathways without changing the underlying behavioral equations.
 
 ## Running locally
 
@@ -54,17 +54,22 @@ https://hgd-dev.github.io/DMAP/
 
 ### Forward · Predict
 
-Use this mode to explore how a club behaves under different initial conditions and interventions.
+Use this mode to explore how a collective behaves under different initial conditions and interventions.
 
 Main controls include:
 
-* **Students / network size** — number of simulated core network students.
+* **Agents / network size** — number of simulated core network agents.
 * **Regime** — collapse-prone or stabilizing dynamics.
-* **Friend-group size** — how students cluster into communities.
-* **Close ties per student** — within-group influence connections.
-* **Bridge ties per student** — cross-group influence connections.
+* **Weeks to Simulate** — timeframe for running the network
+* **Current active membership** — initialization of member count
+* **Motivation distribution** — initialization of motivation across current members
+* **Commitment/loyalty distribution** — initialization of commitment or loyalty across current members
+* **Fatigue distribution** — initialization of fatigue across current members
+* **Group size** — how students cluster into communities.
+* **Close ties** — within-group influence connections.
+* **Bridge ties** — cross-group influence connections.
 * **Extra acquaintance ties** — additional weak long-range ties.
-* **Public population** — size of the wider visual student body around the core network.
+* **Public population** — size of the wider visual collective body around the core network.
 * **Events** — week and intensity of enthusiasm pulses.
 * **Visibility** — promotion / expressive reach.
 * **Capacity** — effective room or format capacity.
@@ -84,13 +89,7 @@ Use this mode to ask:
 Set:
 
 * target steady attendance,
-* weeks available,
-* regime,
-* maximum number of events,
-* maximum event intensity,
-* maximum visibility,
-* room capacity ceiling,
-* whether mentoring is allowed.
+* main controls
 
 Then press **Find a plan**.
 
@@ -113,7 +112,7 @@ If a feasible plan is found, you can test it with:
 
 ## Model relationship
 
-The simulator implements the behavioral equations from *Participation Diffusion Dynamics in Influence-Driven Networks* as an interactive companion.
+The simulator implements the behavioral equations from *State-Dependent Participation Diffusion on Adaptive Influence Networks* as an interactive companion.
 
 The following are visualization or interface layers rather than changes to the model:
 
@@ -130,14 +129,19 @@ The close-tie and bridge-tie controls affect the randomized graph ensemble. They
 ```text
 .
 ├── index.html
-├── participation_diffusion_model_explorer.html
 ├── README.md
 ├── Paper/
-│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.pdf
-│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.tex
-├── ODD/
-│   ├── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.pdf
-│   └── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - H. Dong.tex
+│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - Hudson Dong.pdf
+│   ├── State-Dependent Participation Diffusion on Adaptive Influence Networks - Hudson Dong.tex
+├── ODD Protocol/
+│   ├── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - Hudson Dong.pdf
+│   └── ODD Protocol for State-Dependent Participation Diffusion on Adaptive Influence Networks - Hudson Dong.tex
+├── Figures/
+│   ├── Figure1_heatmap.pdf
+│   └── Figure2_trajectories.pdf
+├── Supplements/
+│   ├── Color Readout Supplement - H. Dong.pdf
+│   └── Color Readout Supplement - H. Dong.tex
 └── LICENSE
 ```
 
